@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WA MARKETING BD</title>
     <style>
+        /* আপনার পুরনো CSS ঠিক same থাকবে */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
@@ -139,6 +140,22 @@
         }
         .task-item .number { font-weight: 700; color: #22d3ee; }
         .task-item .reward { color: #34d399; font-weight: 700; }
+        .task-item .task-status-pending { 
+            background: rgba(245,158,11,0.15); 
+            color: #fbbf24; 
+            padding: 2px 10px; 
+            border-radius: 20px; 
+            font-size: 11px; 
+            font-weight: 600;
+        }
+        .task-item .task-status-done { 
+            background: rgba(16,185,129,0.15); 
+            color: #34d399; 
+            padding: 2px 10px; 
+            border-radius: 20px; 
+            font-size: 11px; 
+            font-weight: 600;
+        }
         
         .history-item {
             padding: 10px 12px;
@@ -442,6 +459,38 @@
             color: #fff;
         }
         .btn-task-delete { background: #f43f5e; }
+
+        .pending-confirm-box {
+            background: rgba(245,158,11,0.05);
+            border: 1px solid rgba(245,158,11,0.15);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            animation: pulse-border 2s ease-in-out infinite;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(245,158,11,0.15); }
+            50% { border-color: rgba(245,158,11,0.4); }
+        }
+        .pending-confirm-box .pending-phone {
+            font-weight: 700;
+            color: #22d3ee;
+            font-size: 16px;
+        }
+        .pending-confirm-box .pending-msg {
+            font-size: 13px;
+            color: #94a3b8;
+            margin: 6px 0;
+            padding: 8px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 8px;
+            word-break: break-all;
+        }
+        .pending-confirm-box .pending-label {
+            font-size: 12px;
+            color: #fbbf24;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -453,7 +502,7 @@
 
 <div class="container" id="app">
     
-    <!-- AUTH SCREEN - No Captcha -->
+    <!-- AUTH SCREEN -->
     <div id="authScreen" class="content" style="display:flex;flex-direction:column;justify-content:center;">
         <div style="max-width:380px;margin:0 auto;width:100%;">
             <div style="text-align:center;margin-bottom:24px;">
@@ -498,28 +547,30 @@
                         <button class="btn btn-danger" id="upgradeBtn" style="font-size:12px;padding:10px;">⭐ প্রিমিয়ামে আপগ্রেড (৳ <span id="feeDisplay">200</span>)</button>
                     </div>
                 </div>
+                
+                <!-- PENDING CONFIRMATION BOX (FIXED) -->
+                <div id="pendingConfirmBox" class="hidden pending-confirm-box">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span class="pending-label">⏳ পেন্ডিং কনফার্মেশন</span>
+                        <span class="task-status-pending">অপেক্ষমান</span>
+                    </div>
+                    <div class="pending-phone" id="pendingPhoneDisplay">📱 018XXXXXXXX</div>
+                    <div class="pending-msg" id="pendingMsgDisplay">মেসেজ লোড হচ্ছে...</div>
+                    <div style="display:flex;gap:10px;margin-top:10px;">
+                        <button class="btn btn-success" id="pendingConfirmBtn" style="margin:0;flex:1;padding:12px;font-size:13px;">✅ হ্যাঁ, মেসেজ পাঠিয়েছি</button>
+                        <button class="btn btn-danger" id="pendingCancelBtn" style="margin:0;flex:1;padding:12px;font-size:13px;">❌ বাতিল</button>
+                    </div>
+                </div>
+                
                 <div id="taskListContainer"></div>
             </div>
 
-            <!-- CONFIRM - Timer + Button -->
+            <!-- CONFIRM TAB (REMOVED - Now using pending box) -->
             <div id="tab-confirm" class="tab-content hidden">
                 <div class="card">
                     <h3>✅ <span>মেসেজ কনফার্মেশন</span></h3>
-                    <p id="confirmTargetPhone" style="color:#22d3ee;font-weight:700;font-size:14px;"></p>
-                    <p style="font-size:13px;color:#94a3b8;margin:8px 0;">আপনি কি মেসেজ পাঠিয়েছেন?</p>
-                    
-                    <div class="timer-box" id="timerBox">
-                        <div class="timer-label">⏱️ অপেক্ষা করুন</div>
-                        <span class="num" id="countdownTimer">15</span>
-                        <div class="timer-label">সেকেন্ড</div>
-                    </div>
-                    
-                    <button class="btn btn-success" id="confirmSubmitBtn" disabled>
-                        ✅ হ্যাঁ, মেসেজ পাঠিয়েছি
-                    </button>
-                    <button class="btn btn-danger" style="margin-top:6px;" id="confirmCancelBtn">
-                        ❌ বাতিল
-                    </button>
+                    <p style="color:#94a3b8;font-size:13px;">⚠️ এই ট্যাবটি আর ব্যবহার করা হয় না। টাস্ক পেজ থেকে কনফার্ম করুন।</p>
+                    <button class="btn btn-accent" onclick="switchTab('tasks', document.querySelector('#navTasks'))">📢 টাস্ক পেজে যান</button>
                 </div>
             </div>
 
@@ -770,7 +821,11 @@
 
 <script>
 // ============================================================
-// FULL SYSTEM - NO CAPTCHA, AUTO LOGIN, SESSION PERSISTENT
+// FULL SYSTEM - FIXED VERSION v22.0
+// FIXED: Pending confirmation box shows on tasks page
+// FIXED: Confirm/cancel removes pending and hides box
+// FIXED: Task hides after confirm, new tasks appear
+// FIXED: Persistent across refresh/logout
 // ============================================================
 
 // Firebase Config
@@ -829,6 +884,9 @@ let allUsersCache = [];
 let allTasksCache = [];
 let editingSelectedPhone = null;
 let historyFilter = 'all';
+let settingsUnsubscribe = null;
+let pendingConfirmUnsubscribe = null;
+let historyUnsubscribe = null;
 
 // ====== SETTINGS ======
 let appSettings = {
@@ -879,13 +937,17 @@ function formatPhoneForWhatsApp(phone) {
 // ====== LOAD SETTINGS ======
 function loadSettings() {
     const db = firebase.firestore();
-    db.collection('settings').doc('global').get().then((snap) => {
+    if (settingsUnsubscribe) settingsUnsubscribe();
+    
+    settingsUnsubscribe = db.collection('settings').doc('global').onSnapshot((snap) => {
         if (snap.exists) {
             const data = snap.data();
             appSettings = { ...appSettings, ...data };
+            
             document.getElementById('userNoticeMarquee').innerText = data.noticeText || appSettings.noticeText;
             document.getElementById('userRulesContent').innerText = data.rules || appSettings.rules;
             renderSupportLinks(data.support || appSettings.support);
+            
             document.getElementById('adminFreeLimit').value = data.freeDailyLimit || 10;
             document.getElementById('adminPremLimit').value = data.premiumDailyLimit || 50;
             document.getElementById('adminUpgradeFee').value = data.upgradeFee || 200;
@@ -897,8 +959,20 @@ function loadSettings() {
             document.getElementById('adminNoticeText').value = data.noticeText || '';
             document.getElementById('adminRulesText').value = data.rules || '';
             document.getElementById('adminSupportLinks').value = data.support || '';
+            
+            if (currentUser && !currentUser.isAdmin) {
+                document.getElementById('feeDisplay').innerText = data.upgradeFee || 200;
+                document.getElementById('p2pLimitTxt').innerText = 'ন্যূনতম: ৳ ' + (data.p2pMin || 50);
+                if (currentUser.isPremium) {
+                    document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (data.premiumUserMinWithdraw || 1000);
+                } else {
+                    document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (data.freeUserMinWithdraw || 100);
+                }
+            }
         }
-    }).catch(() => {});
+    }, (error) => {
+        console.error('Settings listener error:', error);
+    });
 }
 
 function renderSupportLinks(support) {
@@ -924,7 +998,7 @@ function renderSupportLinks(support) {
     }
 }
 
-// ====== AUTH - No Captcha ======
+// ====== AUTH ======
 document.getElementById('authSwitchBtn').addEventListener('click', function() {
     isRegisterMode = !isRegisterMode;
     const reg = document.getElementById('registerFields');
@@ -954,7 +1028,6 @@ document.getElementById('authBtn').addEventListener('click', function() {
 
     const db = firebase.firestore();
 
-    // ADMIN LOGIN
     if (phone === ADMIN_PHONE && password === ADMIN_PASSWORD && !isRegisterMode) {
         currentUser = { phone, name: 'Admin Pro', balance: 0, isPremium: true, isAdmin: true };
         localStorage.setItem('waUser', JSON.stringify(currentUser));
@@ -1043,58 +1116,14 @@ function showMainScreen() {
         document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (appSettings.freeUserMinWithdraw || 100);
     }
     
+    loadSettings();
     loadUserTasks();
     loadUserHistory();
     loadReferralEarnings();
-    loadSettings();
+    checkPendingConfirmations();
 }
 
-// ====== USER TASKS ======
-function loadUserTasks() {
-    const container = document.getElementById('taskListContainer');
-    container.innerHTML = '<div class="spinner"></div>';
-    const db = firebase.firestore();
-    db.collection('tasks').where('status', '==', 'Active').get().then((snap) => {
-        container.innerHTML = '';
-        if (snap.empty) {
-            container.innerHTML = '<div style="text-align:center;padding:30px;background:rgba(0,0,0,0.15);border-radius:14px;"><p style="font-size:15px;color:#22d3ee;font-weight:700;">📭 কোনো টাস্ক নেই</p></div>';
-            return;
-        }
-        const limit = currentUser.isPremium ? (appSettings.premiumDailyLimit || 50) : (appSettings.freeDailyLimit || 10);
-        const completed = currentUser.messagesSentToday || 0;
-        const remaining = limit - completed;
-        if (remaining <= 0) {
-            container.innerHTML = '<div style="text-align:center;padding:30px;background:rgba(0,0,0,0.15);border-radius:14px;"><p style="font-size:15px;color:#fbbf24;font-weight:700;">⏰ লিমিট শেষ! আজ ' + limit + ' টি সম্পন্ন</p></div>';
-            return;
-        }
-        let c = 0;
-        snap.forEach(doc => {
-            if (c >= remaining) return;
-            const task = doc.data();
-            const taskId = doc.id;
-            const reward = currentUser.isPremium ? (task.premPrice || 3) : (task.freePrice || 1);
-            const div = document.createElement('div');
-            div.className = 'task-item';
-            div.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;"><span class="number">📱 ' + task.targetPhone + '</span><span class="reward">৳ ' + reward + '</span></div><button class="btn btn-accent" style="margin-top:8px;padding:10px;font-size:12px;" data-taskid="' + taskId + '" data-phone="' + task.targetPhone + '" data-msg="' + task.message.replace(/"/g, '&quot;') + '" data-reward="' + reward + '">✉️ মেসেজ পাঠান</button>';
-            container.appendChild(div);
-            c++;
-        });
-        
-        container.querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const taskId = this.getAttribute('data-taskid');
-                const phone = this.getAttribute('data-phone');
-                const message = this.getAttribute('data-msg');
-                const reward = parseInt(this.getAttribute('data-reward'));
-                startTaskAction(taskId, phone, message, reward);
-            });
-        });
-    }).catch((e) => {
-        container.innerHTML = '<p style="text-align:center;color:#fb7185;">এরর: ' + e.message + '</p>';
-    });
-}
-
-// ====== START TASK ACTION ======
+// ====== START TASK ACTION (FIXED) ======
 function startTaskAction(taskId, phone, message, reward) {
     const limit = currentUser.isPremium ? (appSettings.premiumDailyLimit || 50) : (appSettings.freeDailyLimit || 10);
     if ((currentUser.messagesSentToday || 0) >= limit) {
@@ -1110,68 +1139,145 @@ function startTaskAction(taskId, phone, message, reward) {
             return;
         }
         
-        db.collection('tasks').doc(taskId).get().then((doc) => {
-            if (!doc.exists || doc.data().status !== 'Active') {
-                showAlert('authAlert', '❌ টাস্কটি নেই!');
+        return db.collection('pendingConfirmations')
+            .where('userPhone', '==', currentUser.phone)
+            .where('taskId', '==', taskId)
+            .where('status', '==', 'pending')
+            .get()
+            .then((pendingSnap) => {
+                if (!pendingSnap.empty) {
+                    checkPendingConfirmations();
+                    showAlert('authAlert', '⏳ ইতিমধ্যে পেন্ডিং! কনফার্ম করুন', 'warning');
+                    return;
+                }
+                
+                return db.collection('tasks').doc(taskId).get().then((doc) => {
+                    if (!doc.exists || doc.data().status !== 'Active') {
+                        showAlert('authAlert', '❌ টাস্কটি নেই!');
+                        loadUserTasks();
+                        return;
+                    }
+                    
+                    showConfirm('📤 মেসেজ পাঠান', 'আপনি কি ' + phone + ' নম্বরে মেসেজ পাঠাতে চান?').then((confirmed) => {
+                        if (!confirmed) return;
+                        
+                        return db.collection('pendingConfirmations').add({
+                            userPhone: currentUser.phone,
+                            taskId: taskId,
+                            targetPhone: phone,
+                            message: message,
+                            reward: reward,
+                            status: 'pending',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }).then(() => {
+                            activeTask = { id: taskId, phone, message, reward };
+                            
+                            const finalMessage = message;
+                            const formattedPhone = formatPhoneForWhatsApp(phone);
+                            const waUrl = 'https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(finalMessage);
+                            window.open(waUrl, '_blank');
+                            
+                            switchTab('tasks', document.querySelector('#navTasks'));
+                            checkPendingConfirmations();
+                            
+                            showAlert('authAlert', '📤 মেসেজ পাঠান হয়েছে! ব্যাক করে কনফার্ম করুন', 'success');
+                        });
+                    });
+                });
+            });
+    }).catch((e) => {
+        showAlert('authAlert', 'এরর: ' + e.message);
+    });
+}
+
+// ====== PENDING CONFIRMATION SYSTEM (FIXED) ======
+function checkPendingConfirmations() {
+    if (!currentUser) return;
+    if (pendingConfirmUnsubscribe) pendingConfirmUnsubscribe();
+    
+    const db = firebase.firestore();
+    pendingConfirmUnsubscribe = db.collection('pendingConfirmations')
+        .where('userPhone', '==', currentUser.phone)
+        .where('status', '==', 'pending')
+        .onSnapshot((snap) => {
+            const box = document.getElementById('pendingConfirmBox');
+            const taskContainer = document.getElementById('taskListContainer');
+            
+            if (snap.empty) {
+                box.classList.add('hidden');
+                // Reload tasks so new tasks appear
                 loadUserTasks();
                 return;
             }
             
-            showConfirm('📤 মেসেজ পাঠান', 'আপনি কি ' + phone + ' নম্বরে মেসেজ পাঠাতে চান?').then((confirmed) => {
-                if (!confirmed) return;
-                
-                activeTask = { id: taskId, phone, message, reward };
-                
-                const finalMessage = message;
-                console.log('📤 Message sent to:', phone);
-                
-                const formattedPhone = formatPhoneForWhatsApp(phone);
-                const waUrl = 'https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(finalMessage);
-                window.open(waUrl, '_blank');
-                
-                // Confirm tab এ নিয়ে যান
-                switchTab('confirm', document.querySelector('#navTasks'));
-                document.getElementById('confirmTargetPhone').innerText = '📱 ' + phone;
-
-                let time = 15;
-                const span = document.getElementById('countdownTimer');
-                const btn = document.getElementById('confirmSubmitBtn');
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                document.getElementById('timerBox').className = 'timer-box';
-
-                clearInterval(timerInterval);
-                timerInterval = setInterval(() => {
-                    time--;
-                    span.innerText = time;
-                    if (time <= 0) {
-                        clearInterval(timerInterval);
-                        document.getElementById('timerBox').className = 'timer-box done';
-                        document.getElementById('timerBox').innerHTML = '<div class="timer-label">✅ সময় শেষ</div><span class="num" style="color:#34d399;">✔</span><div class="timer-label">কনফার্ম করুন</div>';
-                        btn.disabled = false;
-                        btn.style.opacity = '1';
-                    }
-                }, 1000);
-            });
+            const doc = snap.docs[0];
+            const data = doc.data();
+            
+            box.classList.remove('hidden');
+            document.getElementById('pendingPhoneDisplay').innerHTML = '📱 ' + data.targetPhone;
+            document.getElementById('pendingMsgDisplay').innerText = data.message;
+            
+            if (taskContainer) {
+                taskContainer.innerHTML = `<div style="text-align:center;padding:30px;background:rgba(245,158,11,0.05);border-radius:14px;border:1px solid rgba(245,158,11,0.1);">
+                    <p style="font-size:15px;color:#fbbf24;font-weight:700;">⏳ একটি কনফার্মেশন পেন্ডিং</p>
+                    <p style="font-size:13px;color:#94a3b8;margin-top:6px;">উপরের বক্স থেকে কনফার্ম বা ক্যান্সেল করুন</p>
+                </div>`;
+            }
+            
+            box.dataset.pendingId = doc.id;
+            box.dataset.taskId = data.taskId || '';
+            box.dataset.reward = data.reward || 0;
+            box.dataset.targetPhone = data.targetPhone;
+        }, (error) => {
+            console.error('Pending confirm listener error:', error);
         });
-    });
 }
 
-// ====== CONFIRM SUBMIT ======
-document.getElementById('confirmSubmitBtn').addEventListener('click', function() {
-    const reward = activeTask.reward || (currentUser.isPremium ? 3 : 1);
+// ====== PENDING CONFIRM ACTIONS (FIXED) ======
+document.getElementById('pendingConfirmBtn').addEventListener('click', function() {
+    const box = document.getElementById('pendingConfirmBox');
+    const pendingId = box.dataset.pendingId;
+    const taskId = box.dataset.taskId;
+    const reward = parseFloat(box.dataset.reward) || 1;
+    const targetPhone = box.dataset.targetPhone;
+    
+    if (!pendingId) return;
+    
+    // Direct confirm - no extra popup
+    completePendingConfirmation(pendingId, taskId, reward, targetPhone);
+});
+
+document.getElementById('pendingCancelBtn').addEventListener('click', function() {
+    const box = document.getElementById('pendingConfirmBox');
+    const pendingId = box.dataset.pendingId;
+    
+    if (!pendingId) return;
+    
+    showConfirm('❌ ক্যান্সেল', 'আপনি কি কনফার্মেশন বাতিল করতে চান?').then((confirmed) => {
+        if (!confirmed) return;
+        cancelPendingConfirmation(pendingId);
+    });
+});
+
+// ====== COMPLETE PENDING CONFIRMATION (FIXED) ======
+function completePendingConfirmation(pendingId, taskId, reward, targetPhone) {
+    const db = firebase.firestore();
+    const box = document.getElementById('pendingConfirmBox');
+    
+    // Hide box immediately
+    box.classList.add('hidden');
+    
     currentUser.balance = (currentUser.balance || 0) + reward;
     currentUser.messagesSentToday = (currentUser.messagesSentToday || 0) + 1;
-
-    const db = firebase.firestore();
+    
     db.collection('users').doc(currentUser.phone).update({
         balance: currentUser.balance,
         messagesSentToday: currentUser.messagesSentToday
     }).then(() => {
         return db.collection('history').add({
             phone: currentUser.phone,
-            taskId: activeTask.id,
-            target: activeTask.phone,
+            taskId: taskId,
+            target: targetPhone,
             reward: reward,
             type: 'task',
             status: 'Success',
@@ -1179,11 +1285,16 @@ document.getElementById('confirmSubmitBtn').addEventListener('click', function()
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
     }).then(() => {
-        return db.collection('tasks').doc(activeTask.id).update({
-            status: 'Completed',
-            completedBy: currentUser.phone,
-            completedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        if (taskId) {
+            return db.collection('tasks').doc(taskId).update({
+                status: 'Completed',
+                completedBy: currentUser.phone,
+                completedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+        return Promise.resolve();
+    }).then(() => {
+        return db.collection('pendingConfirmations').doc(pendingId).delete();
     }).then(() => {
         if (currentUser.referredBy) {
             return db.collection('users').doc(currentUser.referredBy).get().then((refSnap) => {
@@ -1212,20 +1323,101 @@ document.getElementById('confirmSubmitBtn').addEventListener('click', function()
         document.getElementById('userBalance').innerText = currentUser.balance;
         document.getElementById('taskCount').innerText = currentUser.messagesSentToday;
         showAlert('authAlert', '✅ ৳ ' + reward + ' যোগ হয়েছে!', 'success');
-        switchTab('tasks', document.querySelector('#navTasks'));
+        
         loadUserTasks();
-        loadUserHistory();
         loadReferralEarnings();
+        activeTask = null;
     }).catch((e) => {
         showAlert('authAlert', 'এরর: ' + e.message);
     });
-});
+}
 
-// ====== CANCEL CONFIRM ======
-document.getElementById('confirmCancelBtn').addEventListener('click', function() {
-    switchTab('tasks', document.querySelector('#navTasks'));
-    clearInterval(timerInterval);
-});
+// ====== CANCEL PENDING CONFIRMATION (FIXED) ======
+function cancelPendingConfirmation(pendingId) {
+    const db = firebase.firestore();
+    db.collection('pendingConfirmations').doc(pendingId).delete().then(() => {
+        document.getElementById('pendingConfirmBox').classList.add('hidden');
+        showAlert('authAlert', '❌ কনফার্মেশন বাতিল করা হয়েছে', 'warning');
+        loadUserTasks();
+        activeTask = null;
+    }).catch((e) => {
+        showAlert('authAlert', 'এরর: ' + e.message);
+    });
+}
+
+// ====== USER TASKS (FIXED) ======
+function loadUserTasks() {
+    const container = document.getElementById('taskListContainer');
+    container.innerHTML = '<div class="spinner"></div>';
+    const db = firebase.firestore();
+    
+    db.collection('pendingConfirmations')
+        .where('userPhone', '==', currentUser.phone)
+        .where('status', '==', 'pending')
+        .get()
+        .then((pendingSnap) => {
+            if (!pendingSnap.empty) {
+                container.innerHTML = `<div style="text-align:center;padding:30px;background:rgba(245,158,11,0.05);border-radius:14px;border:1px solid rgba(245,158,11,0.1);">
+                    <p style="font-size:15px;color:#fbbf24;font-weight:700;">⏳ একটি কনফার্মেশন পেন্ডিং</p>
+                    <p style="font-size:13px;color:#94a3b8;margin-top:6px;">উপরের বক্স থেকে কনফার্ম বা ক্যান্সেল করুন</p>
+                </div>`;
+                return;
+            }
+            
+            return db.collection('tasks').where('status', '==', 'Active').get().then((snap) => {
+                container.innerHTML = '';
+                if (snap.empty) {
+                    container.innerHTML = '<div style="text-align:center;padding:30px;background:rgba(0,0,0,0.15);border-radius:14px;"><p style="font-size:15px;color:#22d3ee;font-weight:700;">📭 কোনো টাস্ক নেই</p></div>';
+                    return;
+                }
+                
+                const limit = currentUser.isPremium ? (appSettings.premiumDailyLimit || 50) : (appSettings.freeDailyLimit || 10);
+                const completed = currentUser.messagesSentToday || 0;
+                const remaining = limit - completed;
+                if (remaining <= 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:30px;background:rgba(0,0,0,0.15);border-radius:14px;"><p style="font-size:15px;color:#fbbf24;font-weight:700;">⏰ লিমিট শেষ! আজ ' + limit + ' টি সম্পন্ন</p></div>';
+                    return;
+                }
+                
+                let c = 0;
+                snap.forEach(doc => {
+                    if (c >= remaining) return;
+                    const task = doc.data();
+                    const taskId = doc.id;
+                    const reward = currentUser.isPremium ? (task.premPrice || 3) : (task.freePrice || 1);
+                    const div = document.createElement('div');
+                    div.className = 'task-item';
+                    div.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span class="number">📱 ${task.targetPhone}</span>
+                            <span class="reward">৳ ${reward}</span>
+                        </div>
+                        <button class="btn btn-accent" style="margin-top:8px;padding:10px;font-size:12px;" 
+                            data-taskid="${taskId}" 
+                            data-phone="${task.targetPhone}" 
+                            data-msg="${task.message.replace(/"/g, '&quot;')}" 
+                            data-reward="${reward}">
+                            ✉️ মেসেজ পাঠান
+                        </button>
+                    `;
+                    container.appendChild(div);
+                    c++;
+                });
+                
+                container.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const taskId = this.getAttribute('data-taskid');
+                        const phone = this.getAttribute('data-phone');
+                        const message = this.getAttribute('data-msg');
+                        const reward = parseInt(this.getAttribute('data-reward'));
+                        startTaskAction(taskId, phone, message, reward);
+                    });
+                });
+            });
+        }).catch((e) => {
+            container.innerHTML = '<p style="text-align:center;color:#fb7185;">এরর: ' + e.message + '</p>';
+        });
+}
 
 // ====== UPGRADE ======
 document.getElementById('upgradeBtn').addEventListener('click', function() {
@@ -1305,7 +1497,6 @@ document.getElementById('p2pSendBtn').addEventListener('click', function() {
             document.getElementById('p2pPhone').value = '';
             document.getElementById('p2pAmount').value = '';
             showAlert('authAlert', '✅ ট্রান্সফার সফল!', 'success');
-            loadUserHistory();
         }).catch((e) => {
             showAlert('authAlert', 'এরর: ' + e.message);
         });
@@ -1359,7 +1550,6 @@ document.getElementById('withdrawBtn').addEventListener('click', function() {
             document.getElementById('withdrawAccountNum').value = '';
             document.getElementById('withdrawAmount').value = '';
             showAlert('authAlert', '✅ রিকোয়েস্ট সাবমিট!', 'success');
-            loadUserHistory();
         }).catch((e) => {
             showAlert('authAlert', 'এরর: ' + e.message);
         });
@@ -1374,7 +1564,7 @@ document.getElementById('withdrawMethod').addEventListener('change', function() 
 });
 
 // ====== NAVIGATION ======
-document.getElementById('navTasks').addEventListener('click', function() { switchTab('tasks', this); });
+document.getElementById('navTasks').addEventListener('click', function() { switchTab('tasks', this); loadUserTasks(); });
 document.getElementById('navP2P').addEventListener('click', function() { switchTab('p2p', this); });
 document.getElementById('navWallet').addEventListener('click', function() { switchTab('wallet', this); });
 document.getElementById('navSupport').addEventListener('click', function() { switchTab('support', this); });
@@ -1392,77 +1582,76 @@ document.querySelectorAll('.history-filter button').forEach(btn => {
 
 // ====== USER HISTORY ======
 function loadUserHistory() {
+    if (!currentUser) return;
     const container = document.getElementById('historyListContainer');
-    if (!currentUser) {
-        container.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">লগইন করুন</p>';
-        return;
-    }
+    
+    if (historyUnsubscribe) historyUnsubscribe();
+    
     const db = firebase.firestore();
-    db.collection('history')
-      .where('phone', '==', currentUser.phone)
-      .orderBy('timestamp', 'desc')
-      .get()
-      .then((snap) => {
-        container.innerHTML = '';
-        if (snap.empty) {
-            container.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">কোনো হিস্টরি নেই</p>';
-            return;
-        }
-        
-        let filteredData = [];
-        snap.forEach(doc => {
-            const item = doc.data();
-            if (historyFilter === 'all' || item.type === historyFilter) {
-                filteredData.push(item);
-            }
-        });
-        
-        if (filteredData.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">এই ক্যাটাগরিতে কোনো হিস্টরি নেই</p>';
-            return;
-        }
-        
-        filteredData.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            
-            let icon = '📱';
-            let detail = '';
-            let amount = '';
-            let statusClass = 'status-success';
-            
-            if (item.type === 'task') {
-                icon = '📱';
-                detail = 'টাস্ক: ' + item.target;
-                amount = '+৳ ' + item.reward;
-                statusClass = 'status-success';
-            } else if (item.type === 'referral') {
-                icon = '👥';
-                detail = 'রেফারেল: ' + item.target;
-                amount = '+৳ ' + item.reward;
-                statusClass = 'status-success';
-            } else if (item.type === 'p2p') {
-                icon = '🔄';
-                detail = 'P2P: ' + item.target;
-                amount = '-৳ ' + item.amount;
-                statusClass = 'status-success';
-            } else if (item.type === 'withdraw') {
-                icon = '💳';
-                detail = 'উত্তোলন: ' + item.target;
-                amount = '-৳ ' + item.amount;
-                statusClass = item.status === 'Pending' ? 'status-pending' : 'status-success';
+    historyUnsubscribe = db.collection('history')
+        .where('phone', '==', currentUser.phone)
+        .orderBy('timestamp', 'desc')
+        .onSnapshot((snap) => {
+            container.innerHTML = '';
+            if (snap.empty) {
+                container.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">কোনো হিস্টরি নেই</p>';
+                return;
             }
             
-            div.innerHTML = `
-                <span class="history-icon">${icon}</span>
-                <span class="history-detail">${detail}</span>
-                <span class="history-amount ${statusClass}">${amount}</span>
-            `;
-            container.appendChild(div);
+            let filteredData = [];
+            snap.forEach(doc => {
+                const item = doc.data();
+                if (historyFilter === 'all' || item.type === historyFilter) {
+                    filteredData.push(item);
+                }
+            });
+            
+            if (filteredData.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">এই ক্যাটাগরিতে কোনো হিস্টরি নেই</p>';
+                return;
+            }
+            
+            filteredData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                
+                let icon = '📱';
+                let detail = '';
+                let amount = '';
+                let statusClass = 'status-success';
+                
+                if (item.type === 'task') {
+                    icon = '📱';
+                    detail = 'টাস্ক: ' + item.target;
+                    amount = '+৳ ' + item.reward;
+                    statusClass = 'status-success';
+                } else if (item.type === 'referral') {
+                    icon = '👥';
+                    detail = 'রেফারেল: ' + item.target;
+                    amount = '+৳ ' + item.reward;
+                    statusClass = 'status-success';
+                } else if (item.type === 'p2p') {
+                    icon = '🔄';
+                    detail = 'P2P: ' + item.target;
+                    amount = '-৳ ' + item.amount;
+                    statusClass = 'status-success';
+                } else if (item.type === 'withdraw') {
+                    icon = '💳';
+                    detail = 'উত্তোলন: ' + item.target;
+                    amount = '-৳ ' + item.amount;
+                    statusClass = item.status === 'Pending' ? 'status-pending' : 'status-success';
+                }
+                
+                div.innerHTML = `
+                    <span class="history-icon">${icon}</span>
+                    <span class="history-detail">${detail}</span>
+                    <span class="history-amount ${statusClass}">${amount}</span>
+                `;
+                container.appendChild(div);
+            });
+        }, (error) => {
+            console.error('History listener error:', error);
         });
-    }).catch((e) => {
-        container.innerHTML = '<p style="text-align:center;color:#fb7185;">হিস্টরি লোড করতে সমস্যা: ' + e.message + '</p>';
-    });
 }
 
 // ====== REFERRAL EARNINGS ======
@@ -1898,16 +2087,6 @@ document.getElementById('settingsSaveBtn').addEventListener('click', function() 
     const db = firebase.firestore();
     db.collection('settings').doc('global').set(data, { merge: true }).then(() => {
         showAlert('authAlert', '✅ সেটিংস সেভ!', 'success');
-        loadSettings();
-        document.getElementById('feeDisplay').innerText = data.upgradeFee || 200;
-        if (currentUser && !currentUser.isAdmin) {
-            if (currentUser.isPremium) {
-                document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (data.premiumUserMinWithdraw || 1000);
-            } else {
-                document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (data.freeUserMinWithdraw || 100);
-            }
-            document.getElementById('p2pLimitTxt').innerText = 'ন্যূনতম: ৳ ' + (data.p2pMin || 50);
-        }
     }).catch((e) => {
         showAlert('authAlert', 'এরর: ' + e.message);
     });
@@ -1917,6 +2096,7 @@ document.getElementById('settingsSaveBtn').addEventListener('click', function() 
 document.getElementById('navLogout').addEventListener('click', function() {
     showConfirm('🚪 লগআউট', 'আপনি কি লগআউট করতে চান?').then((confirmed) => {
         if (!confirmed) return;
+        cleanupListeners();
         currentUser = null;
         localStorage.removeItem('waUser');
         document.getElementById('mainScreen').classList.add('hidden');
@@ -1931,6 +2111,7 @@ document.getElementById('navLogout').addEventListener('click', function() {
 document.getElementById('adminLogout').addEventListener('click', function() {
     showConfirm('🚪 লগআউট', 'আপনি কি লগআউট করতে চান?').then((confirmed) => {
         if (!confirmed) return;
+        cleanupListeners();
         currentUser = null;
         localStorage.removeItem('waUser');
         document.getElementById('adminScreen').classList.add('hidden');
@@ -1939,6 +2120,12 @@ document.getElementById('adminLogout').addEventListener('click', function() {
         document.getElementById('authPassword').value = '';
     });
 });
+
+function cleanupListeners() {
+    if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
+    if (pendingConfirmUnsubscribe) { pendingConfirmUnsubscribe(); pendingConfirmUnsubscribe = null; }
+    if (historyUnsubscribe) { historyUnsubscribe(); historyUnsubscribe = null; }
+}
 
 // ====== AUTO LOGIN CHECK ======
 function checkAutoLogin() {
@@ -1967,17 +2154,15 @@ function checkAutoLogin() {
 
 // ====== START APP ======
 function startApp() {
-    console.log('🚀 WA MARKETING BD v20.0 - FINAL VERSION');
+    console.log('🚀 WA MARKETING BD v22.0 - FINAL FIXED VERSION');
     console.log('📱 Admin: 01866989184');
     console.log('🔑 Password: Mrinal@1271');
-    console.log('✅ No Captcha, Auto Login, Session Persistent!');
+    console.log('✅ Fixed: Pending box on tasks page, confirm/cancel works, task hides after confirm');
     
-    // Auto login check
     const loggedIn = checkAutoLogin();
     if (!loggedIn) {
         document.getElementById('loadingOverlay').style.display = 'none';
     }
-    loadSettings();
 }
 </script>
 
