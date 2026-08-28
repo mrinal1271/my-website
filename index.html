@@ -102,38 +102,6 @@
         }
         input::placeholder, textarea::placeholder { color: #64748b; }
         
-        .captcha-box {
-            background: rgba(0,0,0,0.3);
-            padding: 14px;
-            border-radius: 14px;
-            text-align: center;
-            margin: 8px 0 12px 0;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .captcha-text {
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: 10px;
-            color: #22d3ee;
-            font-family: 'Courier New', monospace;
-            background: rgba(0,0,0,0.3);
-            padding: 8px 20px;
-            border-radius: 10px;
-            display: inline-block;
-            user-select: none;
-        }
-        .captcha-refresh {
-            cursor: pointer;
-            font-size: 22px;
-            color: #94a3b8;
-            transition: 0.3s;
-            padding: 8px;
-            display: inline-block;
-            background: transparent;
-            border: none;
-        }
-        .captcha-refresh:hover { color: #a78bfa; transform: rotate(180deg); }
-        
         .nav-bar {
             display: flex;
             background: rgba(0,0,0,0.4);
@@ -485,7 +453,7 @@
 
 <div class="container" id="app">
     
-    <!-- AUTH SCREEN -->
+    <!-- AUTH SCREEN - No Captcha -->
     <div id="authScreen" class="content" style="display:flex;flex-direction:column;justify-content:center;">
         <div style="max-width:380px;margin:0 auto;width:100%;">
             <div style="text-align:center;margin-bottom:24px;">
@@ -499,15 +467,6 @@
             </div>
             <div class="form-group"><label>📱 ফোন নম্বর</label><input type="tel" id="authPhone" placeholder="018XXXXXXXX"></div>
             <div class="form-group"><label>🔑 পাসওয়ার্ড</label><input type="password" id="authPassword" placeholder="পাসওয়ার্ড দিন"></div>
-            <div class="captcha-box">
-                <div style="display:flex;justify-content:center;align-items:center;gap:12px;">
-                    <span class="captcha-text" id="loginCaptchaText">ABCD12</span>
-                    <button class="captcha-refresh" id="loginCaptchaRefresh">⟳</button>
-                </div>
-                <div class="form-group" style="margin-top:8px;margin-bottom:0;">
-                    <input type="text" id="loginCaptchaInput" placeholder="ক্যাপচা কোড দিন" style="text-align:center;font-size:18px;letter-spacing:4px;">
-                </div>
-            </div>
             <button class="btn" id="authBtn">🔓 লগইন করুন</button>
             <button class="auth-switch" id="authSwitchBtn">অ্যাকাউন্ট নেই? <strong>সাইন আপ করুন</strong></button>
         </div>
@@ -811,8 +770,7 @@
 
 <script>
 // ============================================================
-// SIMPLIFIED SYSTEM - NO SCREENSHOT, NO SECRET CODE
-// FULL CODE - ALL FEATURES WORKING
+// FULL SYSTEM - NO CAPTCHA, AUTO LOGIN, SESSION PERSISTENT
 // ============================================================
 
 // Firebase Config
@@ -886,33 +844,6 @@ let appSettings = {
     rules: "১. হোয়াটসঅ্যাপে নির্দিষ্ট মেসেজ পাঠান\n২. কনফার্ম বাটনে ক্লিক করুন\n৩. সঠিকভাবে কাজ সম্পন্ন করুন",
     support: "YouTube: https://youtube.com, Telegram: https://t.me/example"
 };
-
-// ====== GENERATE UNIQUE ID FOR WHATSAPP ======
-function generateUniqueId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-}
-
-// ====== CAPTCHA ======
-function generateCaptcha() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let c = '';
-    for (let i = 0; i < 6; i++) c += chars.charAt(Math.floor(Math.random() * chars.length));
-    return c;
-}
-function refreshCaptcha(id) {
-    const captcha = generateCaptcha();
-    const el = document.getElementById(id);
-    if (el) el.innerText = captcha;
-    return captcha;
-}
-let loginCaptcha = refreshCaptcha('loginCaptchaText');
-document.getElementById('loginCaptchaRefresh').addEventListener('click', function() {
-    loginCaptcha = refreshCaptcha('loginCaptchaText');
-    document.getElementById('loginCaptchaInput').value = '';
-});
-function verifyCaptchaFunc(input, expected) {
-    return input && input.toUpperCase() === expected;
-}
 
 // ====== SHOW ALERT ======
 function showAlert(id, message, type) {
@@ -993,7 +924,7 @@ function renderSupportLinks(support) {
     }
 }
 
-// ====== AUTH ======
+// ====== AUTH - No Captcha ======
 document.getElementById('authSwitchBtn').addEventListener('click', function() {
     isRegisterMode = !isRegisterMode;
     const reg = document.getElementById('registerFields');
@@ -1015,14 +946,6 @@ document.getElementById('authBtn').addEventListener('click', function() {
     const password = document.getElementById('authPassword').value.trim();
     const name = document.getElementById('regName').value.trim();
     const referredBy = document.getElementById('regReferral') ? document.getElementById('regReferral').value.trim() : '';
-    const captchaInput = document.getElementById('loginCaptchaInput').value.trim();
-
-    if (!verifyCaptchaFunc(captchaInput, loginCaptcha)) {
-        showAlert('authAlert', '❌ ভুল ক্যাপচা!');
-        loginCaptcha = refreshCaptcha('loginCaptchaText');
-        document.getElementById('loginCaptchaInput').value = '';
-        return;
-    }
 
     if (!phone || !password || (isRegisterMode && !name)) {
         showAlert('authAlert', 'সব তথ্য পূরণ করুন');
@@ -1034,6 +957,7 @@ document.getElementById('authBtn').addEventListener('click', function() {
     // ADMIN LOGIN
     if (phone === ADMIN_PHONE && password === ADMIN_PASSWORD && !isRegisterMode) {
         currentUser = { phone, name: 'Admin Pro', balance: 0, isPremium: true, isAdmin: true };
+        localStorage.setItem('waUser', JSON.stringify(currentUser));
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('adminScreen').classList.remove('hidden');
         loadAdminDashboard();
@@ -1069,6 +993,7 @@ document.getElementById('authBtn').addEventListener('click', function() {
             return db.collection('users').doc(phone).set(newUser).then(() => {
                 currentUser = newUser;
                 currentUser.phone = phone;
+                localStorage.setItem('waUser', JSON.stringify(currentUser));
                 showAlert('authAlert', '✅ অ্যাকাউন্ট তৈরি হয়েছে!', 'success');
                 showMainScreen();
             });
@@ -1092,6 +1017,7 @@ document.getElementById('authBtn').addEventListener('click', function() {
             }
             currentUser = data;
             currentUser.phone = phone;
+            localStorage.setItem('waUser', JSON.stringify(currentUser));
             showMainScreen();
         }).catch((e) => {
             showAlert('authAlert', 'এরর: ' + e.message);
@@ -1196,7 +1122,6 @@ function startTaskAction(taskId, phone, message, reward) {
                 
                 activeTask = { id: taskId, phone, message, reward };
                 
-                // শুধু মেসেজ পাঠান - কোন কোড বা Secret নেই
                 const finalMessage = message;
                 console.log('📤 Message sent to:', phone);
                 
@@ -1204,6 +1129,7 @@ function startTaskAction(taskId, phone, message, reward) {
                 const waUrl = 'https://wa.me/' + formattedPhone + '?text=' + encodeURIComponent(finalMessage);
                 window.open(waUrl, '_blank');
                 
+                // Confirm tab এ নিয়ে যান
                 switchTab('confirm', document.querySelector('#navTasks'));
                 document.getElementById('confirmTargetPhone').innerText = '📱 ' + phone;
 
@@ -1793,7 +1719,6 @@ document.getElementById('pubTaskBtn').addEventListener('click', function() {
         for (let i = start; i < end; i++) {
             const num = numbers[i];
             const ref = db.collection('tasks').doc();
-            // ✅ শুধু মেসেজ, কোন কোড বা Secret যোগ করা হয়নি
             batch.set(ref, {
                 targetPhone: num,
                 message: msg,
@@ -1993,13 +1918,13 @@ document.getElementById('navLogout').addEventListener('click', function() {
     showConfirm('🚪 লগআউট', 'আপনি কি লগআউট করতে চান?').then((confirmed) => {
         if (!confirmed) return;
         currentUser = null;
+        localStorage.removeItem('waUser');
         document.getElementById('mainScreen').classList.add('hidden');
         document.getElementById('adminScreen').classList.add('hidden');
         document.getElementById('authScreen').classList.remove('hidden');
         document.getElementById('authPhone').value = '';
         document.getElementById('authPassword').value = '';
         clearInterval(timerInterval);
-        loginCaptcha = refreshCaptcha('loginCaptchaText');
     });
 });
 
@@ -2007,20 +1932,51 @@ document.getElementById('adminLogout').addEventListener('click', function() {
     showConfirm('🚪 লগআউট', 'আপনি কি লগআউট করতে চান?').then((confirmed) => {
         if (!confirmed) return;
         currentUser = null;
+        localStorage.removeItem('waUser');
         document.getElementById('adminScreen').classList.add('hidden');
         document.getElementById('authScreen').classList.remove('hidden');
         document.getElementById('authPhone').value = '';
         document.getElementById('authPassword').value = '';
-        loginCaptcha = refreshCaptcha('loginCaptchaText');
     });
 });
 
+// ====== AUTO LOGIN CHECK ======
+function checkAutoLogin() {
+    const savedUser = localStorage.getItem('waUser');
+    if (savedUser) {
+        try {
+            const user = JSON.parse(savedUser);
+            if (user && user.phone) {
+                const db = firebase.firestore();
+                db.collection('users').doc(user.phone).get().then((snap) => {
+                    if (snap.exists) {
+                        const data = snap.data();
+                        if (!data.blocked) {
+                            currentUser = data;
+                            currentUser.phone = user.phone;
+                            showMainScreen();
+                            return true;
+                        }
+                    }
+                }).catch(() => {});
+            }
+        } catch(e) {}
+    }
+    return false;
+}
+
 // ====== START APP ======
 function startApp() {
-    console.log('🚀 WA MARKETING BD v19.0 - FINAL VERSION');
+    console.log('🚀 WA MARKETING BD v20.0 - FINAL VERSION');
     console.log('📱 Admin: 01866989184');
     console.log('🔑 Password: Mrinal@1271');
-    console.log('✅ No Secret Code, No Screenshot, Simple Confirm Button!');
+    console.log('✅ No Captcha, Auto Login, Session Persistent!');
+    
+    // Auto login check
+    const loggedIn = checkAutoLogin();
+    if (!loggedIn) {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
     loadSettings();
 }
 </script>
