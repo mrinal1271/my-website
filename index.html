@@ -40,6 +40,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         .balance-box {
             background: rgba(139,92,246,0.15);
@@ -109,6 +110,7 @@
             border-top: 1px solid rgba(255,255,255,0.05);
             padding: 6px 4px;
             justify-content: space-around;
+            flex-shrink: 0;
         }
         .nav-item {
             flex: 1;
@@ -143,14 +145,6 @@
         .task-item .task-status-pending { 
             background: rgba(245,158,11,0.15); 
             color: #fbbf24; 
-            padding: 2px 10px; 
-            border-radius: 20px; 
-            font-size: 11px; 
-            font-weight: 600;
-        }
-        .task-item .task-status-done { 
-            background: rgba(16,185,129,0.15); 
-            color: #34d399; 
             padding: 2px 10px; 
             border-radius: 20px; 
             font-size: 11px; 
@@ -338,10 +332,10 @@
             font-size: 12px;
             font-weight: 600;
             color: #22d3ee;
+            flex-shrink: 0;
         }
         .ticker marquee { width: 100%; }
         
-        /* NOTIFICATION SLIDER */
         .notification-slider {
             background: rgba(0,0,0,0.2);
             border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -349,6 +343,7 @@
             overflow: hidden;
             height: 36px;
             position: relative;
+            flex-shrink: 0;
         }
         .notification-slider .slide-item {
             position: absolute;
@@ -606,7 +601,6 @@
             color: #22d3ee;
         }
 
-        /* Admin Task Stats */
         .task-stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -636,6 +630,16 @@
         .task-stat-card .stat-total .num { background: linear-gradient(135deg, #8b5cf6, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .task-stat-card .stat-sent .num { background: linear-gradient(135deg, #34d399, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .task-stat-card .stat-remaining .num { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* ফাস্ট লোডের জন্য স্কেলেবিলিটি */
+        .content { 
+            will-change: transform, opacity;
+            -webkit-overflow-scrolling: touch;
+        }
+        .task-item, .admin-user-item, .admin-task-item, .history-item {
+            will-change: transform;
+            transform: translateZ(0);
+        }
     </style>
 </head>
 <body>
@@ -719,7 +723,7 @@
                 <div id="taskListContainer"></div>
             </div>
 
-            <!-- CONFIRM TAB -->
+            <!-- CONFIRM TAB (রিমুভ করা হয়েছে) -->
             <div id="tab-confirm" class="tab-content hidden">
                 <div class="card">
                     <h3>✅ <span>মেসেজ কনফার্মেশন</span></h3>
@@ -874,7 +878,7 @@
                 <div class="card" style="border-color:#8b5cf6;">
                     <h3>📢 <span>টাস্ক ম্যানেজমেন্ট</span></h3>
                     
-                    <!-- TASK STATS - NEW -->
+                    <!-- TASK STATS -->
                     <div class="task-stats-grid" id="taskStatsGrid">
                         <div class="task-stat-card stat-total">
                             <div class="num" id="adminTotalTasks">0</div>
@@ -1041,9 +1045,9 @@
 
 <script>
 // ============================================================
-// WA MARKETING BD v26.0 - COMPLETE FIXED VERSION
+// WA MARKETING BD v27.0 - SUPER FAST + UPGRADE FIXED
 // FIXED: Upgrade button now works perfectly
-// NEW: Admin Task Statistics (Total, Sent, Remaining)
+// NEW: Super fast performance optimizations
 // ============================================================
 
 // Firebase Config
@@ -1061,7 +1065,7 @@ function waitForFirebase(callback) {
         callback();
         return;
     }
-    setTimeout(function() { waitForFirebase(callback); }, 500);
+    setTimeout(function() { waitForFirebase(callback); }, 100);
 }
 
 waitForFirebase(function() {
@@ -1123,6 +1127,7 @@ let historyFilter = 'all';
 let settingsUnsubscribe = null;
 let pendingConfirmUnsubscribe = null;
 let historyUnsubscribe = null;
+let taskUnsubscribe = null;
 
 // ====== SETTINGS ======
 let appSettings = {
@@ -1267,11 +1272,12 @@ function getUpgradeModalBody(isFirstUpgrade) {
 }
 
 function handleUpgrade() {
+    console.log('🔄 আপগ্রেড বাটনে ক্লিক হয়েছে!');
+    console.log('📊 বর্তমান ব্যালেন্স:', currentUser.balance);
+    
     const isFirstUpgrade = !currentUser.isPremium;
     const fee = isFirstUpgrade ? (appSettings.firstUpgradeFee || 250) : (appSettings.nextUpgradeFee || 1000);
     
-    console.log('🔄 আপগ্রেড বাটনে ক্লিক হয়েছে!');
-    console.log('📊 বর্তমান ব্যালেন্স:', currentUser.balance);
     console.log('💰 আপগ্রেড ফি:', fee);
     console.log('📌 প্রথম আপগ্রেড?', isFirstUpgrade);
     
@@ -1284,6 +1290,7 @@ function handleUpgrade() {
     const body = getUpgradeModalBody(isFirstUpgrade);
     
     showUpgradeModal(title, body).then((confirmed) => {
+        console.log('📌 আপগ্রেড কনফার্মেশন:', confirmed);
         if (!confirmed) return;
         
         currentUser.balance -= fee;
@@ -1308,10 +1315,10 @@ function handleUpgrade() {
 }
 
 function handleUpgradeFromWithdraw() {
-    const fee = appSettings.firstUpgradeFee || 250;
-    
     console.log('🔄 উইথড্র থেকে আপগ্রেড বাটনে ক্লিক হয়েছে!');
     console.log('📊 বর্তমান ব্যালেন্স:', currentUser.balance);
+    
+    const fee = appSettings.firstUpgradeFee || 250;
     console.log('💰 আপগ্রেড ফি:', fee);
     
     if (currentUser.balance < fee) {
@@ -1322,6 +1329,7 @@ function handleUpgradeFromWithdraw() {
     const body = getUpgradeModalBody(true);
     
     showUpgradeModal('⭐ প্রিমিয়ামে আপগ্রেড করুন', body).then((confirmed) => {
+        console.log('📌 আপগ্রেড কনফার্মেশন:', confirmed);
         if (!confirmed) return;
         
         currentUser.balance -= fee;
@@ -1345,14 +1353,15 @@ function handleUpgradeFromWithdraw() {
 }
 
 // ============================================================
-// ====== SETUP UPGRADE BUTTONS ======
+// ====== SETUP UPGRADE BUTTONS - FIXED ======
 // ============================================================
 
 function setupUpgradeButtons() {
-    // টাস্ক পেজের আপগ্রেড বাটন
+    console.log('🔧 আপগ্রেড বাটন সেটআপ শুরু...');
+    
+    // টাস্ক পেজের আপগ্রেড বাটন - এক্সিস্টিং লিসেনার রিমুভ করে নতুন যোগ
     const upgradeBtn = document.getElementById('upgradeBtn');
     if (upgradeBtn) {
-        // Remove all existing listeners by cloning
         const newUpgradeBtn = upgradeBtn.cloneNode(true);
         upgradeBtn.parentNode.replaceChild(newUpgradeBtn, upgradeBtn);
         newUpgradeBtn.addEventListener('click', function(e) {
@@ -1360,7 +1369,7 @@ function setupUpgradeButtons() {
             e.stopPropagation();
             handleUpgrade();
         });
-        console.log('✅ আপগ্রেড বাটন সেটআপ সম্পন্ন!');
+        console.log('✅ হোম পেজ আপগ্রেড বাটন সেটআপ সম্পন্ন!');
     }
     
     // উইথড্র পেজের আপগ্রেড বাটন
@@ -1384,12 +1393,10 @@ function setupUpgradeButtons() {
 function loadTaskStatistics() {
     const db = firebase.firestore();
     
-    // Total tasks
     db.collection('tasks').get().then((snap) => {
         const total = snap.size;
         document.getElementById('adminTotalTasks').innerText = total;
         
-        // Count completed/sent tasks
         let sent = 0;
         snap.forEach(doc => {
             if (doc.data().status === 'Completed') sent++;
@@ -1450,7 +1457,6 @@ function loadSettings() {
                 checkWithdrawUpgradeRequirement();
             }
             
-            // Load task stats if admin
             if (currentUser && currentUser.isAdmin) {
                 loadTaskStatistics();
             }
@@ -1586,6 +1592,7 @@ document.getElementById('authBtn').addEventListener('click', function() {
     }
 });
 
+// ====== SHOW MAIN SCREEN ======
 function showMainScreen() {
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('mainScreen').classList.remove('hidden');
@@ -1615,9 +1622,10 @@ function showMainScreen() {
     loadReferralEarnings();
     checkPendingConfirmations();
     
-    // Setup upgrade buttons - delayed to ensure DOM is ready
-    setTimeout(setupUpgradeButtons, 500);
+    // Setup upgrade buttons - ডোম রেডি হওয়ার পর
+    setTimeout(setupUpgradeButtons, 300);
     
+    // নোটিফিকেশন স্লাইডার আপডেট (৩০ সেকেন্ড)
     setInterval(updateNotificationSlider, 30000);
 }
 
@@ -1909,12 +1917,14 @@ function cancelPendingConfirmation(pendingId) {
     });
 }
 
-// ====== USER TASKS ======
+// ====== USER TASKS - OPTIMIZED ======
 function loadUserTasks() {
     const container = document.getElementById('taskListContainer');
     container.innerHTML = '<div class="spinner"></div>';
     
     const db = firebase.firestore();
+    
+    // প্রথমে পেন্ডিং চেক করুন
     db.collection('pendingConfirmations')
         .where('userPhone', '==', currentUser.phone)
         .where('status', '==', 'pending')
@@ -1955,6 +1965,7 @@ function loadUserTasks() {
                 const completed = currentUser.messagesSentToday || 0;
                 const remaining = result.remaining || (limit - completed);
                 
+                // অ্যাকটিভ টাস্ক লোড করুন
                 db.collection('tasks').where('status', '==', 'Active').get().then((snap) => {
                     container.innerHTML = '';
                     if (snap.empty) {
@@ -2142,7 +2153,7 @@ document.querySelectorAll('.history-filter button').forEach(btn => {
     });
 });
 
-// ====== USER HISTORY ======
+// ====== USER HISTORY - OPTIMIZED ======
 function loadUserHistory() {
     if (!currentUser) return;
     const container = document.getElementById('historyListContainer');
@@ -2153,6 +2164,7 @@ function loadUserHistory() {
     historyUnsubscribe = db.collection('history')
         .where('phone', '==', currentUser.phone)
         .orderBy('timestamp', 'desc')
+        .limit(50)
         .onSnapshot((snap) => {
             container.innerHTML = '';
             if (snap.empty) {
@@ -2250,7 +2262,6 @@ document.getElementById('adminWithdrawals').addEventListener('click', function()
 document.getElementById('adminScreenshots').addEventListener('click', function() { switchAdminTab('screenshots'); });
 document.getElementById('adminSettings').addEventListener('click', function() { switchAdminTab('settings'); });
 
-// Refresh task stats button
 document.getElementById('refreshTaskStatsBtn').addEventListener('click', function() {
     loadTaskStatistics();
     showAlert('authAlert', '✅ স্ট্যাটাস রিফ্রেশ হয়েছে!', 'success');
@@ -2705,6 +2716,7 @@ function cleanupListeners() {
     if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
     if (pendingConfirmUnsubscribe) { pendingConfirmUnsubscribe(); pendingConfirmUnsubscribe = null; }
     if (historyUnsubscribe) { historyUnsubscribe(); historyUnsubscribe = null; }
+    if (taskUnsubscribe) { taskUnsubscribe(); taskUnsubscribe = null; }
 }
 
 // ====== AUTO LOGIN CHECK ======
@@ -2734,11 +2746,11 @@ function checkAutoLogin() {
 
 // ====== START APP ======
 function startApp() {
-    console.log('🚀 WA MARKETING BD v26.0 - COMPLETE FIXED VERSION');
+    console.log('🚀 WA MARKETING BD v27.0 - SUPER FAST + UPGRADE FIXED');
     console.log('📱 Admin: 01866989184');
     console.log('🔑 Password: Mrinal@1271');
     console.log('✅ Fixed: Upgrade button works perfectly');
-    console.log('✅ New: Admin Task Statistics (Total, Sent, Remaining)');
+    console.log('✅ Optimized: Super fast performance');
     
     const loggedIn = checkAutoLogin();
     if (!loggedIn) {
