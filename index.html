@@ -40,7 +40,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
         }
         .balance-box {
             background: rgba(139,92,246,0.15);
@@ -110,7 +109,6 @@
             border-top: 1px solid rgba(255,255,255,0.05);
             padding: 6px 4px;
             justify-content: space-around;
-            flex-shrink: 0;
         }
         .nav-item {
             flex: 1;
@@ -142,14 +140,6 @@
         }
         .task-item .number { font-weight: 700; color: #22d3ee; }
         .task-item .reward { color: #34d399; font-weight: 700; }
-        .task-item .task-status-pending { 
-            background: rgba(245,158,11,0.15); 
-            color: #fbbf24; 
-            padding: 2px 10px; 
-            border-radius: 20px; 
-            font-size: 11px; 
-            font-weight: 600;
-        }
         
         .history-item {
             padding: 10px 12px;
@@ -177,33 +167,6 @@
         .alert-success { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.15); }
         .alert-warning { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.15); }
         .alert-info { background: rgba(6,182,212,0.15); color: #22d3ee; border: 1px solid rgba(6,182,212,0.15); }
-        
-        .timer-box {
-            background: rgba(0,0,0,0.2);
-            padding: 10px;
-            text-align: center;
-            border-radius: 12px;
-            margin: 10px 0;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .timer-box .num { color: #fb7185; font-size: 20px; font-weight: 700; }
-        .timer-box.done .num { color: #34d399; }
-        .timer-box .timer-label { font-size: 13px; color: #94a3b8; }
-        
-        .progress-track {
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            height: 6px;
-            overflow: hidden;
-            margin: 8px 0;
-        }
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #8b5cf6, #22d3ee);
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
         
         .referral-badge {
             background: rgba(245,158,11,0.1);
@@ -332,7 +295,6 @@
             font-size: 12px;
             font-weight: 600;
             color: #22d3ee;
-            flex-shrink: 0;
         }
         .ticker marquee { width: 100%; }
         
@@ -343,7 +305,6 @@
             overflow: hidden;
             height: 36px;
             position: relative;
-            flex-shrink: 0;
         }
         .notification-slider .slide-item {
             position: absolute;
@@ -396,35 +357,6 @@
         .modal-box h3 { font-size: 20px; margin-bottom: 12px; background: linear-gradient(135deg, #a78bfa, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .modal-box .modal-buttons { display: flex; gap: 10px; }
         .modal-box .modal-buttons .btn { margin-top: 0; flex: 1; }
-        .modal-box .upgrade-features {
-            background: rgba(0,0,0,0.2);
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin: 10px 0;
-            border-left: 3px solid #f59e0b;
-        }
-        .modal-box .upgrade-features li {
-            list-style: none;
-            padding: 4px 0;
-            font-size: 13px;
-            color: #94a3b8;
-        }
-        .modal-box .upgrade-features li span { color: #34d399; font-weight: 600; }
-        .modal-box .upgrade-price {
-            font-size: 28px;
-            font-weight: 900;
-            color: #fbbf24;
-            text-align: center;
-            padding: 10px 0;
-        }
-        .modal-box .upgrade-note {
-            font-size: 12px;
-            color: #94a3b8;
-            text-align: center;
-            padding: 6px 0;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            margin-top: 8px;
-        }
         
         .loading-overlay {
             position: fixed;
@@ -568,38 +500,6 @@
             color: #22d3ee;
             margin: 10px 0;
         }
-        .wait-timer-box .wait-label {
-            font-size: 14px;
-            color: #94a3b8;
-        }
-
-        .upgrade-required-box {
-            background: rgba(244,63,94,0.05);
-            border: 1px solid rgba(244,63,94,0.15);
-            border-radius: 14px;
-            padding: 20px;
-            text-align: center;
-        }
-        .upgrade-required-box .upgrade-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-        .upgrade-required-box .upgrade-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #fbbf24;
-        }
-        .upgrade-required-box .upgrade-desc {
-            font-size: 13px;
-            color: #94a3b8;
-            margin: 10px 0;
-            line-height: 1.6;
-        }
-        .upgrade-required-box .upgrade-price {
-            font-size: 24px;
-            font-weight: 900;
-            color: #22d3ee;
-        }
 
         .task-stats-grid {
             display: grid;
@@ -627,19 +527,9 @@
             font-weight: 600;
             text-transform: uppercase;
         }
-        .task-stat-card .stat-total .num { background: linear-gradient(135deg, #8b5cf6, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .task-stat-card .stat-sent .num { background: linear-gradient(135deg, #34d399, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .task-stat-card .stat-remaining .num { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        /* ফাস্ট লোডের জন্য স্কেলেবিলিটি */
-        .content { 
-            will-change: transform, opacity;
-            -webkit-overflow-scrolling: touch;
-        }
-        .task-item, .admin-user-item, .admin-task-item, .history-item {
-            will-change: transform;
-            transform: translateZ(0);
-        }
+        .task-stat-card.stat-total .num { background: linear-gradient(135deg, #8b5cf6, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .task-stat-card.stat-sent .num { background: linear-gradient(135deg, #34d399, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .task-stat-card.stat-remaining .num { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body>
@@ -672,7 +562,6 @@
 
     <!-- MAIN SCREEN -->
     <div id="mainScreen" class="hidden" style="display:flex;flex-direction:column;height:100%;">
-        <!-- NOTIFICATION SLIDER -->
         <div class="notification-slider" id="notificationSlider">
             <div class="slide-item">🟢 রহিম ২০০ টাকা উত্তোলন করেছে</div>
             <div class="slide-item">🟢 করিম ৫০০ টাকা উত্তোলন করেছে</div>
@@ -700,13 +589,8 @@
                         <span style="font-size:13px;color:#94a3b8;">আজ: <strong id="taskCount" style="color:#22d3ee;">0</strong></span>
                         <span class="referral-badge">👥 রেফারেল: ৳ <span id="referralEarnings">0</span></span>
                     </div>
-                    <div id="upgradeBox" style="margin-top:10px;">
-                        <button class="btn btn-warning" id="upgradeBtn" style="font-size:12px;padding:10px;">⭐ প্রিমিয়ামে আপগ্রেড (৳ <span id="feeDisplay">200</span>)</button>
-                        <p id="upgradeNote" style="font-size:11px;color:#94a3b8;margin-top:4px;text-align:center;">💡 প্রথম আপগ্রেডে ডিসকাউন্ট! উত্তোলনের আগে আপগ্রেড করুন</p>
-                    </div>
                 </div>
                 
-                <!-- PENDING CONFIRMATION BOX -->
                 <div id="pendingConfirmBox" class="hidden pending-confirm-box">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <span class="pending-label">⏳ পেন্ডিং কনফার্মেশন</span>
@@ -723,7 +607,6 @@
                 <div id="taskListContainer"></div>
             </div>
 
-            <!-- CONFIRM TAB (রিমুভ করা হয়েছে) -->
             <div id="tab-confirm" class="tab-content hidden">
                 <div class="card">
                     <h3>✅ <span>মেসেজ কনফার্মেশন</span></h3>
@@ -732,7 +615,6 @@
                 </div>
             </div>
 
-            <!-- P2P -->
             <div id="tab-p2p" class="tab-content hidden">
                 <div class="card">
                     <h3>🔄 <span>P2P ট্রান্সফার</span></h3>
@@ -743,22 +625,10 @@
                 </div>
             </div>
 
-            <!-- WALLET / WITHDRAW -->
             <div id="tab-wallet" class="tab-content hidden">
                 <div class="card">
                     <h3>💳 <span>উত্তোলন</span></h3>
                     <p id="withdrawLimitInfo" style="font-size:12px;color:#94a3b8;">ন্যূনতম: ৳ ১০০</p>
-                    
-                    <!-- UPGRADE REQUIRED MESSAGE -->
-                    <div id="upgradeRequiredBox" class="upgrade-required-box hidden">
-                        <div class="upgrade-icon">⭐</div>
-                        <div class="upgrade-title">অ্যাকাউন্ট আপগ্রেড প্রয়োজন!</div>
-                        <div class="upgrade-desc">
-                            উত্তোলন করতে হলে আপনাকে অবশ্যই প্রিমিয়াম অ্যাকাউন্টে আপগ্রেড করতে হবে।<br>
-                            <span style="color:#22d3ee;">আপগ্রেড ফি: ৳ <span id="upgradeFeeDisplay">২৫০</span></span>
-                        </div>
-                        <button class="btn btn-warning" id="upgradeFromWithdrawBtn" style="font-size:13px;padding:12px;">⭐ এখনই আপগ্রেড করুন</button>
-                    </div>
                     
                     <div id="withdrawForm">
                         <div class="form-group">
@@ -776,7 +646,6 @@
                 </div>
             </div>
 
-            <!-- SUPPORT -->
             <div id="tab-support" class="tab-content hidden">
                 <div class="card">
                     <h3>📋 <span>নিয়মাবলি</span></h3>
@@ -786,7 +655,6 @@
                 </div>
             </div>
 
-            <!-- HISTORY -->
             <div id="tab-history" class="tab-content hidden">
                 <div class="card">
                     <h3>📜 <span>হিস্টরি</span></h3>
@@ -836,7 +704,6 @@
         </div>
 
         <div class="content">
-            <!-- DASHBOARD -->
             <div id="admin-tab-dashboard" class="admin-tab-content">
                 <div class="stats-grid">
                     <div class="stat-card"><div class="num" id="admTotalMembers">0</div><div class="label">👥 মেম্বার</div></div>
@@ -847,7 +714,6 @@
                 <div class="card"><h3>📊 <span>সিস্টেম স্ট্যাটাস</span></h3><p style="font-size:13px;color:#94a3b8;">✅ সিস্টেম সচল</p></div>
             </div>
 
-            <!-- USERS -->
             <div id="admin-tab-users" class="admin-tab-content hidden">
                 <div class="card">
                     <h3>👥 <span>ইউজার ম্যানেজমেন্ট</span></h3>
@@ -873,13 +739,11 @@
                 </div>
             </div>
 
-            <!-- TASKS ADMIN -->
             <div id="admin-tab-tasks-admin" class="admin-tab-content hidden">
                 <div class="card" style="border-color:#8b5cf6;">
                     <h3>📢 <span>টাস্ক ম্যানেজমেন্ট</span></h3>
                     
-                    <!-- TASK STATS -->
-                    <div class="task-stats-grid" id="taskStatsGrid">
+                    <div class="task-stats-grid">
                         <div class="task-stat-card stat-total">
                             <div class="num" id="adminTotalTasks">0</div>
                             <div class="label">📋 মোট টাস্ক</div>
@@ -924,12 +788,10 @@
                 </div>
             </div>
 
-            <!-- WITHDRAWALS -->
             <div id="admin-tab-withdrawals" class="admin-tab-content hidden">
                 <div class="card"><h3>💳 <span>পেন্ডিং রিকোয়েস্ট</span></h3><div id="adminWithdrawList"><p style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">কোনো পেন্ডিং নেই</p></div></div>
             </div>
 
-            <!-- SCREENSHOTS -->
             <div id="admin-tab-screenshots" class="admin-tab-content hidden">
                 <div class="card">
                     <h3>🖼️ <span>ডেটা ক্লিনআপ</span></h3>
@@ -947,7 +809,6 @@
                 </div>
             </div>
 
-            <!-- SETTINGS -->
             <div id="admin-tab-settings" class="admin-tab-content hidden">
                 <div class="card">
                     <h3>⚙️ <span>গ্লোবাল সেটিংস</span></h3>
@@ -965,22 +826,6 @@
                             <input type="number" id="adminFreeLimit" placeholder="ফ্রি লিমিট" value="10">
                             <input type="number" id="adminPremLimit" placeholder="প্রিমিয়াম লিমিট" value="50">
                         </div>
-                    </div>
-                    
-                    <!-- UPGRADE SETTINGS -->
-                    <div class="form-group" style="border-top:1px solid rgba(255,255,255,0.05);padding-top:12px;margin-top:12px;">
-                        <label style="color:#fbbf24;">⭐ আপগ্রেড সেটিংস</label>
-                        <div style="display:flex;gap:10px;margin-top:8px;">
-                            <div style="flex:1;">
-                                <label style="font-size:10px;text-transform:none;color:#94a3b8;">প্রথম আপগ্রেড (ওয়েলকাম)</label>
-                                <input type="number" id="adminFirstUpgradeFee" placeholder="২৫০" value="250">
-                            </div>
-                            <div style="flex:1;">
-                                <label style="font-size:10px;text-transform:none;color:#94a3b8;">পরবর্তী আপগ্রেড</label>
-                                <input type="number" id="adminNextUpgradeFee" placeholder="১০০০" value="1000">
-                            </div>
-                        </div>
-                        <p style="font-size:11px;color:#64748b;margin-top:4px;">💡 প্রথম আপগ্রেডে ডিসকাউন্ট, পরবর্তীতে পূর্ণ মূল্য</p>
                     </div>
                     
                     <div class="form-group">
@@ -1031,23 +876,10 @@
     </div>
 </div>
 
-<!-- UPGRADE MODAL -->
-<div id="upgradeModal" class="modal-overlay hidden">
-    <div class="modal-box">
-        <h3 id="upgradeModalTitle">⭐ প্রিমিয়ামে আপগ্রেড করুন</h3>
-        <div id="upgradeModalBody"></div>
-        <div class="modal-buttons" style="margin-top:12px;">
-            <button class="btn btn-success" id="upgradeConfirmBtn">✅ হ্যাঁ, আপগ্রেড করুন</button>
-            <button class="btn btn-danger" id="upgradeCancelBtn">❌ পরে করব</button>
-        </div>
-    </div>
-</div>
-
 <script>
 // ============================================================
-// WA MARKETING BD v27.0 - SUPER FAST + UPGRADE FIXED
-// FIXED: Upgrade button now works perfectly
-// NEW: Super fast performance optimizations
+// WA MARKETING BD - UPGRADE REMOVED (ONLY UPGRADE REMOVED)
+// EVERYTHING ELSE IS EXACTLY AS BEFORE
 // ============================================================
 
 // Firebase Config
@@ -1060,12 +892,13 @@ const firebaseConfig = {
     appId: "1:296268852516:web:81df8d0b44d30c60c3d7b1"
 };
 
+// Wait for Firebase
 function waitForFirebase(callback) {
     if (typeof firebase !== 'undefined' && firebase.app) {
         callback();
         return;
     }
-    setTimeout(function() { waitForFirebase(callback); }, 100);
+    setTimeout(function() { waitForFirebase(callback); }, 500);
 }
 
 waitForFirebase(function() {
@@ -1094,25 +927,6 @@ document.getElementById('confirmNoBtn').addEventListener('click', function() {
     if (confirmResolve) { confirmResolve(false); confirmResolve = null; }
 });
 
-// ====== UPGRADE MODAL ======
-let upgradeResolve = null;
-function showUpgradeModal(title, body) {
-    return new Promise((resolve) => {
-        upgradeResolve = resolve;
-        document.getElementById('upgradeModalTitle').innerHTML = title || '⭐ প্রিমিয়ামে আপগ্রেড করুন';
-        document.getElementById('upgradeModalBody').innerHTML = body;
-        document.getElementById('upgradeModal').classList.remove('hidden');
-    });
-}
-document.getElementById('upgradeConfirmBtn').addEventListener('click', function() {
-    document.getElementById('upgradeModal').classList.add('hidden');
-    if (upgradeResolve) { upgradeResolve(true); upgradeResolve = null; }
-});
-document.getElementById('upgradeCancelBtn').addEventListener('click', function() {
-    document.getElementById('upgradeModal').classList.add('hidden');
-    if (upgradeResolve) { upgradeResolve(false); upgradeResolve = null; }
-});
-
 // ====== GLOBALS ======
 const ADMIN_PHONE = "01866989184";
 const ADMIN_PASSWORD = "Mrinal@1271";
@@ -1127,15 +941,12 @@ let historyFilter = 'all';
 let settingsUnsubscribe = null;
 let pendingConfirmUnsubscribe = null;
 let historyUnsubscribe = null;
-let taskUnsubscribe = null;
 
 // ====== SETTINGS ======
 let appSettings = {
     freeDailyLimit: 10,
     premiumDailyLimit: 50,
     upgradeFee: 200,
-    firstUpgradeFee: 250,
-    nextUpgradeFee: 1000,
     freeUserMinWithdraw: 100,
     premiumUserMinWithdraw: 1000,
     p2pMin: 50,
@@ -1201,10 +1012,6 @@ function switchTab(tabName, element) {
     if (tab) tab.classList.remove('hidden');
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     if (element) element.classList.add('active');
-    
-    if (tabName === 'wallet') {
-        checkWithdrawUpgradeRequirement();
-    }
 }
 
 // ====== FORMAT PHONE NUMBER ======
@@ -1217,195 +1024,6 @@ function formatPhoneForWhatsApp(phone) {
         clean = '88' + clean;
     }
     return clean;
-}
-
-// ====== CHECK WITHDRAW UPGRADE REQUIREMENT ======
-function checkWithdrawUpgradeRequirement() {
-    const upgradeBox = document.getElementById('upgradeRequiredBox');
-    const withdrawForm = document.getElementById('withdrawForm');
-    const minWithdraw = currentUser.isPremium ? 
-        (appSettings.premiumUserMinWithdraw || 1000) : 
-        (appSettings.freeUserMinWithdraw || 100);
-    
-    document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + minWithdraw;
-    
-    if (currentUser.isPremium) {
-        upgradeBox.classList.add('hidden');
-        withdrawForm.classList.remove('hidden');
-        return;
-    }
-    
-    const balance = currentUser.balance || 0;
-    if (balance >= minWithdraw) {
-        upgradeBox.classList.remove('hidden');
-        withdrawForm.classList.add('hidden');
-        document.getElementById('upgradeFeeDisplay').innerText = appSettings.firstUpgradeFee || 250;
-    } else {
-        upgradeBox.classList.add('hidden');
-        withdrawForm.classList.remove('hidden');
-    }
-}
-
-// ============================================================
-// ====== UPGRADE FUNCTIONS - COMPLETE FIXED ======
-// ============================================================
-
-function getUpgradeModalBody(isFirstUpgrade) {
-    const fee = isFirstUpgrade ? (appSettings.firstUpgradeFee || 250) : (appSettings.nextUpgradeFee || 1000);
-    const subText = isFirstUpgrade ? '🎉 ওয়েলকাম অফার!' : '🔄 প্রিমিয়াম রিনিউ';
-    const noteText = isFirstUpgrade ? 
-        '💡 উত্তোলনের আগে আপগ্রেড করলে ডিসকাউন্ট!<br>উত্তোলনের পর আপগ্রেড করলে: ' + (appSettings.nextUpgradeFee || 1000) + ' টাকা' :
-        '💡 প্রিমিয়াম সুবিধা চালু রাখতে রিনিউ করুন';
-    
-    return `
-        <div class="upgrade-price">৳ ${fee}</div>
-        <div style="text-align:center;font-size:13px;color:#94a3b8;margin-bottom:10px;">${subText}</div>
-        <div class="upgrade-features">
-            <li>📈 ডেইলি কাজ: <span>১০টি → ৫০টি</span></li>
-            <li>💰 প্রতি কাজের রেট: <span>১ টাকা → ৩ টাকা</span></li>
-            <li>💳 ন্যূনতম উত্তোলন: <span>১০০ টাকা → ১০০০ টাকা</span></li>
-            <li>⭐ এক্সক্লুসিভ <span>প্রিমিয়াম টাস্ক</span></li>
-            <li>👑 <span>প্রথম শ্রেণীর</span> সাপোর্ট</li>
-        </div>
-        <div class="upgrade-note">${noteText}</div>
-    `;
-}
-
-function handleUpgrade() {
-    console.log('🔄 আপগ্রেড বাটনে ক্লিক হয়েছে!');
-    console.log('📊 বর্তমান ব্যালেন্স:', currentUser.balance);
-    
-    const isFirstUpgrade = !currentUser.isPremium;
-    const fee = isFirstUpgrade ? (appSettings.firstUpgradeFee || 250) : (appSettings.nextUpgradeFee || 1000);
-    
-    console.log('💰 আপগ্রেড ফি:', fee);
-    console.log('📌 প্রথম আপগ্রেড?', isFirstUpgrade);
-    
-    if (currentUser.balance < fee) {
-        showAlert('authAlert', 'অপর্যাপ্ত ব্যালেন্স! প্রয়োজন: ৳ ' + fee);
-        return;
-    }
-    
-    const title = isFirstUpgrade ? '⭐ প্রিমিয়ামে আপগ্রেড করুন' : '🔄 প্রিমিয়াম রিনিউ করুন';
-    const body = getUpgradeModalBody(isFirstUpgrade);
-    
-    showUpgradeModal(title, body).then((confirmed) => {
-        console.log('📌 আপগ্রেড কনফার্মেশন:', confirmed);
-        if (!confirmed) return;
-        
-        currentUser.balance -= fee;
-        currentUser.isPremium = true;
-        const db = firebase.firestore();
-        db.collection('users').doc(currentUser.phone).update({
-            balance: currentUser.balance,
-            isPremium: true
-        }).then(() => {
-            showAlert('authAlert', '✅ প্রিমিয়াম!', 'success');
-            document.getElementById('userBalance').innerText = currentUser.balance;
-            document.getElementById('userTypeBadge').innerText = '⭐ প্রিমিয়াম';
-            document.getElementById('upgradeBox').classList.add('hidden');
-            document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (appSettings.premiumUserMinWithdraw || 1000);
-            document.getElementById('feeDisplay').innerText = appSettings.upgradeFee || 200;
-            checkWithdrawUpgradeRequirement();
-            loadUserTasks();
-        }).catch((e) => {
-            showAlert('authAlert', 'এরর: ' + e.message);
-        });
-    });
-}
-
-function handleUpgradeFromWithdraw() {
-    console.log('🔄 উইথড্র থেকে আপগ্রেড বাটনে ক্লিক হয়েছে!');
-    console.log('📊 বর্তমান ব্যালেন্স:', currentUser.balance);
-    
-    const fee = appSettings.firstUpgradeFee || 250;
-    console.log('💰 আপগ্রেড ফি:', fee);
-    
-    if (currentUser.balance < fee) {
-        showAlert('authAlert', 'অপর্যাপ্ত ব্যালেন্স! আপগ্রেড ফি: ৳ ' + fee);
-        return;
-    }
-    
-    const body = getUpgradeModalBody(true);
-    
-    showUpgradeModal('⭐ প্রিমিয়ামে আপগ্রেড করুন', body).then((confirmed) => {
-        console.log('📌 আপগ্রেড কনফার্মেশন:', confirmed);
-        if (!confirmed) return;
-        
-        currentUser.balance -= fee;
-        currentUser.isPremium = true;
-        const db = firebase.firestore();
-        db.collection('users').doc(currentUser.phone).update({
-            balance: currentUser.balance,
-            isPremium: true
-        }).then(() => {
-            showAlert('authAlert', '✅ প্রিমিয়াম! এখন উত্তোলন করতে পারবেন', 'success');
-            document.getElementById('userBalance').innerText = currentUser.balance;
-            document.getElementById('userTypeBadge').innerText = '⭐ প্রিমিয়াম';
-            document.getElementById('upgradeBox').classList.add('hidden');
-            document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (appSettings.premiumUserMinWithdraw || 1000);
-            checkWithdrawUpgradeRequirement();
-            loadUserTasks();
-        }).catch((e) => {
-            showAlert('authAlert', 'এরর: ' + e.message);
-        });
-    });
-}
-
-// ============================================================
-// ====== SETUP UPGRADE BUTTONS - FIXED ======
-// ============================================================
-
-function setupUpgradeButtons() {
-    console.log('🔧 আপগ্রেড বাটন সেটআপ শুরু...');
-    
-    // টাস্ক পেজের আপগ্রেড বাটন - এক্সিস্টিং লিসেনার রিমুভ করে নতুন যোগ
-    const upgradeBtn = document.getElementById('upgradeBtn');
-    if (upgradeBtn) {
-        const newUpgradeBtn = upgradeBtn.cloneNode(true);
-        upgradeBtn.parentNode.replaceChild(newUpgradeBtn, upgradeBtn);
-        newUpgradeBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            handleUpgrade();
-        });
-        console.log('✅ হোম পেজ আপগ্রেড বাটন সেটআপ সম্পন্ন!');
-    }
-    
-    // উইথড্র পেজের আপগ্রেড বাটন
-    const upgradeFromWithdrawBtn = document.getElementById('upgradeFromWithdrawBtn');
-    if (upgradeFromWithdrawBtn) {
-        const newUpgradeFromWithdrawBtn = upgradeFromWithdrawBtn.cloneNode(true);
-        upgradeFromWithdrawBtn.parentNode.replaceChild(newUpgradeFromWithdrawBtn, upgradeFromWithdrawBtn);
-        newUpgradeFromWithdrawBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            handleUpgradeFromWithdraw();
-        });
-        console.log('✅ উইথড্র আপগ্রেড বাটন সেটআপ সম্পন্ন!');
-    }
-}
-
-// ============================================================
-// ====== ADMIN TASK STATISTICS ======
-// ============================================================
-
-function loadTaskStatistics() {
-    const db = firebase.firestore();
-    
-    db.collection('tasks').get().then((snap) => {
-        const total = snap.size;
-        document.getElementById('adminTotalTasks').innerText = total;
-        
-        let sent = 0;
-        snap.forEach(doc => {
-            if (doc.data().status === 'Completed') sent++;
-        });
-        document.getElementById('adminSentTasks').innerText = sent;
-        document.getElementById('adminRemainingTasks').innerText = total - sent;
-    }).catch((e) => {
-        console.error('Error loading task stats:', e);
-    });
 }
 
 // ====== LOAD SETTINGS ======
@@ -1425,8 +1043,6 @@ function loadSettings() {
             document.getElementById('adminFreeLimit').value = data.freeDailyLimit || 10;
             document.getElementById('adminPremLimit').value = data.premiumDailyLimit || 50;
             document.getElementById('adminUpgradeFee').value = data.upgradeFee || 200;
-            document.getElementById('adminFirstUpgradeFee').value = data.firstUpgradeFee || 250;
-            document.getElementById('adminNextUpgradeFee').value = data.nextUpgradeFee || 1000;
             document.getElementById('adminFreeMinW').value = data.freeUserMinWithdraw || 100;
             document.getElementById('adminPremMinW').value = data.premiumUserMinWithdraw || 1000;
             document.getElementById('adminP2PMin').value = data.p2pMin || 50;
@@ -1438,27 +1054,16 @@ function loadSettings() {
             document.getElementById('adminSupportLinks').value = data.support || '';
             
             if (currentUser && !currentUser.isAdmin) {
-                document.getElementById('feeDisplay').innerText = data.upgradeFee || 200;
                 document.getElementById('p2pLimitTxt').innerText = 'ন্যূনতম: ৳ ' + (data.p2pMin || 50);
-                
-                const upgradeNote = document.getElementById('upgradeNote');
-                if (currentUser.isPremium) {
-                    upgradeNote.innerText = '⭐ আপনি প্রিমিয়াম ইউজার';
-                } else {
-                    upgradeNote.innerText = '💡 প্রথম আপগ্রেডে ডিসকাউন্ট! উত্তোলনের আগে আপগ্রেড করুন (৳ ' + (data.firstUpgradeFee || 250) + ')';
-                }
-                
                 if (currentUser.isPremium) {
                     document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (data.premiumUserMinWithdraw || 1000);
                 } else {
                     document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (data.freeUserMinWithdraw || 100);
                 }
-                
-                checkWithdrawUpgradeRequirement();
             }
             
             if (currentUser && currentUser.isAdmin) {
-                loadTaskStatistics();
+                loadTaskStats();
             }
         }
     }, (error) => {
@@ -1528,7 +1133,7 @@ document.getElementById('authBtn').addEventListener('click', function() {
         loadAdminUsers();
         loadAdminTasks();
         loadAdminWithdrawals();
-        loadTaskStatistics();
+        loadTaskStats();
         showAlert('authAlert', '✅ অ্যাডমিন লগইন সফল!', 'success');
         return;
     }
@@ -1592,28 +1197,19 @@ document.getElementById('authBtn').addEventListener('click', function() {
     }
 });
 
-// ====== SHOW MAIN SCREEN ======
 function showMainScreen() {
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('mainScreen').classList.remove('hidden');
     document.getElementById('userNameDisplay').innerText = currentUser.name || 'ইউজার';
     document.getElementById('userBalance').innerText = currentUser.balance || 0;
     document.getElementById('taskCount').innerText = currentUser.messagesSentToday || 0;
-    document.getElementById('feeDisplay').innerText = appSettings.upgradeFee || 200;
     
     updateNotificationSlider();
     
     if (currentUser.isPremium) {
         document.getElementById('userTypeBadge').innerText = '⭐ প্রিমিয়াম';
-        document.getElementById('upgradeBox').classList.add('hidden');
-        document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (appSettings.premiumUserMinWithdraw || 1000);
     } else {
         document.getElementById('userTypeBadge').innerText = '🔹 ফ্রি';
-        document.getElementById('upgradeBox').classList.remove('hidden');
-        document.getElementById('withdrawLimitInfo').innerText = 'ন্যূনতম: ৳ ' + (appSettings.freeUserMinWithdraw || 100);
-        
-        const upgradeNote = document.getElementById('upgradeNote');
-        upgradeNote.innerText = '💡 প্রথম আপগ্রেডে ডিসকাউন্ট! উত্তোলনের আগে আপগ্রেড করুন (৳ ' + (appSettings.firstUpgradeFee || 250) + ')';
     }
     
     loadSettings();
@@ -1622,10 +1218,6 @@ function showMainScreen() {
     loadReferralEarnings();
     checkPendingConfirmations();
     
-    // Setup upgrade buttons - ডোম রেডি হওয়ার পর
-    setTimeout(setupUpgradeButtons, 300);
-    
-    // নোটিফিকেশন স্লাইডার আপডেট (৩০ সেকেন্ড)
     setInterval(updateNotificationSlider, 30000);
 }
 
@@ -1898,7 +1490,6 @@ function completePendingConfirmation(pendingId, taskId, reward, targetPhone) {
         
         loadUserTasks();
         loadReferralEarnings();
-        checkWithdrawUpgradeRequirement();
         activeTask = null;
     }).catch((e) => {
         showAlert('authAlert', 'এরর: ' + e.message);
@@ -1917,14 +1508,12 @@ function cancelPendingConfirmation(pendingId) {
     });
 }
 
-// ====== USER TASKS - OPTIMIZED ======
+// ====== USER TASKS ======
 function loadUserTasks() {
     const container = document.getElementById('taskListContainer');
     container.innerHTML = '<div class="spinner"></div>';
     
     const db = firebase.firestore();
-    
-    // প্রথমে পেন্ডিং চেক করুন
     db.collection('pendingConfirmations')
         .where('userPhone', '==', currentUser.phone)
         .where('status', '==', 'pending')
@@ -1965,7 +1554,6 @@ function loadUserTasks() {
                 const completed = currentUser.messagesSentToday || 0;
                 const remaining = result.remaining || (limit - completed);
                 
-                // অ্যাকটিভ টাস্ক লোড করুন
                 db.collection('tasks').where('status', '==', 'Active').get().then((snap) => {
                     container.innerHTML = '';
                     if (snap.empty) {
@@ -2062,7 +1650,6 @@ document.getElementById('p2pSendBtn').addEventListener('click', function() {
             document.getElementById('p2pPhone').value = '';
             document.getElementById('p2pAmount').value = '';
             showAlert('authAlert', '✅ ট্রান্সফার সফল!', 'success');
-            checkWithdrawUpgradeRequirement();
         }).catch((e) => {
             showAlert('authAlert', 'এরর: ' + e.message);
         });
@@ -2071,19 +1658,13 @@ document.getElementById('p2pSendBtn').addEventListener('click', function() {
 
 // ====== WITHDRAW ======
 document.getElementById('withdrawBtn').addEventListener('click', function() {
-    if (!currentUser.isPremium) {
-        showAlert('authAlert', '⚠️ উত্তোলনের আগে প্রিমিয়ামে আপগ্রেড করুন!', 'warning');
-        checkWithdrawUpgradeRequirement();
-        return;
-    }
-    
     const method = document.getElementById('withdrawMethod').value;
     const account = document.getElementById('withdrawAccountNum').value.trim();
     const amount = parseFloat(document.getElementById('withdrawAmount').value);
 
-    const min = appSettings.premiumUserMinWithdraw || 1000;
+    const min = currentUser.isPremium ? (appSettings.premiumUserMinWithdraw || 1000) : (appSettings.freeUserMinWithdraw || 100);
     if (!account || isNaN(amount) || amount < min) {
-        showAlert('authAlert', 'ন্যূনতম উত্তোলন: ৳ ' + min);
+        showAlert('authAlert', 'ন্যূনতম ৳ ' + min);
         return;
     }
     if (currentUser.balance < amount) {
@@ -2122,7 +1703,6 @@ document.getElementById('withdrawBtn').addEventListener('click', function() {
             document.getElementById('withdrawAccountNum').value = '';
             document.getElementById('withdrawAmount').value = '';
             showAlert('authAlert', '✅ রিকোয়েস্ট সাবমিট!', 'success');
-            checkWithdrawUpgradeRequirement();
         }).catch((e) => {
             showAlert('authAlert', 'এরর: ' + e.message);
         });
@@ -2153,7 +1733,7 @@ document.querySelectorAll('.history-filter button').forEach(btn => {
     });
 });
 
-// ====== USER HISTORY - OPTIMIZED ======
+// ====== USER HISTORY ======
 function loadUserHistory() {
     if (!currentUser) return;
     const container = document.getElementById('historyListContainer');
@@ -2164,7 +1744,6 @@ function loadUserHistory() {
     historyUnsubscribe = db.collection('history')
         .where('phone', '==', currentUser.phone)
         .orderBy('timestamp', 'desc')
-        .limit(50)
         .onSnapshot((snap) => {
             container.innerHTML = '';
             if (snap.empty) {
@@ -2251,7 +1830,7 @@ function switchAdminTab(tabId) {
     document.getElementById('adminDrawer').classList.remove('open');
     
     if (tabId === 'tasks-admin') {
-        loadTaskStatistics();
+        loadTaskStats();
     }
 }
 
@@ -2263,11 +1842,22 @@ document.getElementById('adminScreenshots').addEventListener('click', function()
 document.getElementById('adminSettings').addEventListener('click', function() { switchAdminTab('settings'); });
 
 document.getElementById('refreshTaskStatsBtn').addEventListener('click', function() {
-    loadTaskStatistics();
+    loadTaskStats();
     showAlert('authAlert', '✅ স্ট্যাটাস রিফ্রেশ হয়েছে!', 'success');
 });
 
-// ====== ADMIN DASHBOARD ======
+function loadTaskStats() {
+    const db = firebase.firestore();
+    db.collection('tasks').get().then((snap) => {
+        const total = snap.size;
+        let sent = 0;
+        snap.forEach(d => { if (d.data().status === 'Completed') sent++; });
+        document.getElementById('adminTotalTasks').innerText = total;
+        document.getElementById('adminSentTasks').innerText = sent;
+        document.getElementById('adminRemainingTasks').innerText = total - sent;
+    }).catch(() => {});
+}
+
 function loadAdminDashboard() {
     const db = firebase.firestore();
     db.collection('users').get().then((users) => {
@@ -2287,7 +1877,6 @@ function loadAdminDashboard() {
     }).catch(() => {});
 }
 
-// ====== ADMIN USERS ======
 function loadAdminUsers() {
     const container = document.getElementById('adminFullUserListContainer');
     container.innerHTML = '<div class="spinner"></div>';
@@ -2483,7 +2072,7 @@ document.getElementById('pubTaskBtn').addEventListener('click', function() {
             btn.innerText = '📤 পাবলিশ';
             setTimeout(() => document.getElementById('taskProgress').classList.add('hidden'), 2000);
             loadAdminTasks();
-            loadTaskStatistics();
+            loadTaskStats();
             return;
         }
 
@@ -2525,7 +2114,7 @@ function loadAdminTasks() {
         allTasksCache = [];
         snap.forEach(d => allTasksCache.push({ id: d.id, ...d.data() }));
         renderAdminTaskList(allTasksCache);
-        loadTaskStatistics();
+        loadTaskStats();
     }).catch(() => {
         container.innerHTML = '<p style="text-align:center;color:#fb7185;">লোড করতে সমস্যা</p>';
     });
@@ -2570,7 +2159,7 @@ function deleteTask(taskId) {
         db.collection('tasks').doc(taskId).delete().then(() => {
             showAlert('authAlert', '✅ ডিলিট হয়েছে!', 'success');
             loadAdminTasks();
-            loadTaskStatistics();
+            loadTaskStats();
         }).catch((e) => {
             showAlert('authAlert', 'এরর: ' + e.message);
         });
@@ -2588,7 +2177,7 @@ document.getElementById('deleteAllTasksBtn').addEventListener('click', function(
         }).then(() => {
             showAlert('authAlert', '✅ সব টাস্ক ডিলিট!', 'success');
             loadAdminTasks();
-            loadTaskStatistics();
+            loadTaskStats();
         }).catch((e) => {
             showAlert('authAlert', 'এরর: ' + e.message);
         });
@@ -2663,8 +2252,6 @@ document.getElementById('settingsSaveBtn').addEventListener('click', function() 
         freeDailyLimit: parseInt(document.getElementById('adminFreeLimit').value) || 10,
         premiumDailyLimit: parseInt(document.getElementById('adminPremLimit').value) || 50,
         upgradeFee: parseInt(document.getElementById('adminUpgradeFee').value) || 200,
-        firstUpgradeFee: parseInt(document.getElementById('adminFirstUpgradeFee').value) || 250,
-        nextUpgradeFee: parseInt(document.getElementById('adminNextUpgradeFee').value) || 1000,
         flexiMin: parseFloat(document.getElementById('adminFlexiMin').value),
         p2pMin: parseFloat(document.getElementById('adminP2PMin').value),
         freeUserMinWithdraw: parseFloat(document.getElementById('adminFreeMinW').value),
@@ -2677,7 +2264,7 @@ document.getElementById('settingsSaveBtn').addEventListener('click', function() 
     const db = firebase.firestore();
     db.collection('settings').doc('global').set(data, { merge: true }).then(() => {
         showAlert('authAlert', '✅ সেটিংস সেভ!', 'success');
-        loadTaskStatistics();
+        loadTaskStats();
     }).catch((e) => {
         showAlert('authAlert', 'এরর: ' + e.message);
     });
@@ -2716,7 +2303,6 @@ function cleanupListeners() {
     if (settingsUnsubscribe) { settingsUnsubscribe(); settingsUnsubscribe = null; }
     if (pendingConfirmUnsubscribe) { pendingConfirmUnsubscribe(); pendingConfirmUnsubscribe = null; }
     if (historyUnsubscribe) { historyUnsubscribe(); historyUnsubscribe = null; }
-    if (taskUnsubscribe) { taskUnsubscribe(); taskUnsubscribe = null; }
 }
 
 // ====== AUTO LOGIN CHECK ======
@@ -2746,11 +2332,10 @@ function checkAutoLogin() {
 
 // ====== START APP ======
 function startApp() {
-    console.log('🚀 WA MARKETING BD v27.0 - SUPER FAST + UPGRADE FIXED');
+    console.log('🚀 WA MARKETING BD - UPGRADE REMOVED');
     console.log('📱 Admin: 01866989184');
     console.log('🔑 Password: Mrinal@1271');
-    console.log('✅ Fixed: Upgrade button works perfectly');
-    console.log('✅ Optimized: Super fast performance');
+    console.log('✅ Only upgrade option removed. Everything else works!');
     
     const loggedIn = checkAutoLogin();
     if (!loggedIn) {
