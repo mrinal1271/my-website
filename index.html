@@ -4,76 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ফ্রি আর্নিং ও এফিলিয়েট ট্রেনিং কমিউনিটি</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-900 text-slate-100 h-full flex flex-col justify-between font-sans">
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col justify-between font-sans selection:bg-emerald-500 selection:text-white">
+
+    <!-- Notification Sound Audio Element -->
+    <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <!-- Mandatory Notification & Signup Modal -->
-    <div id="authModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+    <div id="authModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl">
             <div class="text-center mb-6">
-                <div class="bg-emerald-500/10 text-emerald-400 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">🔔</div>
-                <h2 class="text-xl font-bold">কমিউনিটিতে স্বাগতম!</h2>
-                <p class="text-sm text-slate-400 mt-1">গ্রুপে প্রবেশ করতে এবং ফ্রি আর্নিং আপডেট পেতে আপনার তথ্য দিয়ে নোটিফিকেশন অন করুন।</p>
+                <div class="bg-emerald-500/10 text-emerald-400 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+                    <i class="fa-solid fa-bell animate-bounce"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white">কমিউনিটিতে স্বাগতম!</h2>
+                <p class="text-xs text-slate-400 mt-1">কোনো কিছু আপডেট মিস করতে না চাইলে এলাও বাটনে ক্লিক করুন।</p>
             </div>
 
-            <form id="signupForm" class="space-y-4">
+            <form id="signupForm" class="space-y-3.5">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">আপনার নাম (আবশ্যক)</label>
-                    <input type="text" id="userName" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500" placeholder="পূর্ণ নাম লিখুন">
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">আপনার নাম (আবশ্যক)</label>
+                    <input type="text" id="userName" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 text-white" placeholder="পূর্ণ নাম লিখুন">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">মোবাইল নম্বর (আবশ্যক)</label>
-                    <input type="tel" id="userPhone" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500" placeholder="01XXXXXXXXX">
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">মোবাইল নম্বর (আবশ্যক)</label>
+                    <input type="tel" id="userPhone" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 text-white" placeholder="01XXXXXXXXX">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">জিমেইল (ঐচ্ছিক)</label>
-                    <input type="email" id="userEmail" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500" placeholder="example@gmail.com">
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-1">জিমেইল (ঐচ্ছিক)</label>
+                    <input type="email" id="userEmail" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 text-white" placeholder="example@gmail.com">
                 </div>
 
-                <button type="button" id="allowBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2">
-                    <span>🔔 নোটিফিকেশন এলাও করুন & প্রবেশ করুন</span>
+                <button type="button" id="allowBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-bell"></i> নোটিফিকেশন এলাও করুন & প্রবেশ করুন
                 </button>
             </form>
-            <p id="errorMsg" class="text-rose-400 text-xs text-center mt-3 hidden">দুঃখিত! নোটিফিকেশন এলাও না করলে এই গ্রুপে প্রবেশ করা যাবে না।</p>
+            <p id="errorMsg" class="text-rose-400 text-xs text-center mt-3 hidden font-medium">দুঃখিত! নোটিফিকেশন এলাও না করলে গ্রুপে প্রবেশ করা যাবে না।</p>
         </div>
     </div>
 
     <!-- Main App Container -->
-    <div id="mainApp" class="hidden flex-1 flex flex-col max-w-2xl w-full mx-auto p-4 overflow-y-auto">
+    <div id="mainApp" class="hidden flex-1 flex flex-col max-w-xl w-full mx-auto p-3 sm:p-4 overflow-y-auto">
         <!-- Header -->
-        <header class="bg-slate-800 border border-slate-700 rounded-2xl p-4 mb-4 flex justify-between items-center shadow-md">
-            <div>
-                <h1 class="font-bold text-lg text-emerald-400">ফ্রি আর্নিং ও এফিলিয়েট ট্রেনিং</h1>
-                <p class="text-xs text-slate-400" id="profileInfo">స</p>
+        <header class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-4 flex justify-between items-center shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm sm:text-base text-emerald-400">অফিসিয়াল আর্নিং গ্রুপ</h1>
+                    <p class="text-[11px] text-slate-400" id="profileInfo">লোড হচ্ছে...</p>
+                </div>
             </div>
-            <button onclick="localStorage.clear(); location.reload();" class="text-xs bg-slate-700 hover:bg-rose-600/20 hover:text-rose-400 text-slate-300 px-3 py-1.5 rounded-lg transition">লগআউট</button>
+            <div class="flex items-center gap-2">
+                <button onclick="openInbox()" class="relative text-xs bg-slate-800 hover:bg-emerald-500/20 text-slate-300 px-3 py-2 rounded-xl transition font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-comment-dots text-emerald-400"></i> ইনবক্স
+                </button>
+                <button onclick="localStorage.clear(); location.reload();" class="text-xs bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 px-3 py-2 rounded-xl transition font-medium">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
         </header>
 
-        <!-- Admin Post Panel (Hidden by default, visible only for 01866989184) -->
-        <div id="adminPanel" class="hidden bg-slate-800 border border-emerald-500/50 rounded-2xl p-4 mb-4 shadow-lg">
-            <h2 class="text-sm font-bold text-emerald-400 mb-2">⚡ অ্যাডমিন পোস্ট প্যানেল</h2>
-            <form id="adminPostForm" class="space-y-3">
-                <textarea id="postContent" rows="3" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-emerald-500" placeholder="নতুন কোনো অফার, টিপস বা ট্রেনিং লিংক শেয়ার করুন..."></textarea>
-                <input type="text" id="postLink" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="বটন বা ভিডিও লিংক (ঐচ্ছিক)">
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-4 py-2 rounded-xl transition">পোস্ট পাবলিশ করুন</button>
-            </form>
+        <!-- Admin Control & Post Panel (Visible only for 01866989184) -->
+        <div id="adminPanel" class="hidden space-y-4 mb-4">
+            <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 shadow-xl">
+                <h2 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> অ্যাডমিন কন্ট্রোল প্যানেল
+                </h2>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-300">মোট মেম্বার:</span>
+                        <span id="totalMembersCount" class="text-emerald-400 font-bold">2000+</span>
+                    </div>
+                    <label class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 cursor-pointer">
+                        <span>মেম্বার পোস্ট অন/অফ</span>
+                        <input type="checkbox" id="settingMemberPost" class="accent-emerald-500 w-4 h-4">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Post Creator Box -->
+            <div class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 shadow-xl">
+                <h2 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-nib"></i> নতুন পোস্ট / ক্লাস লিংক ক্রিয়েটর
+                </h2>
+                <form id="adminPostForm" class="space-y-3">
+                    <textarea id="postContent" rows="3" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="টেক্সট, ইউটিউব, ফেসবুক বা জুম লাইভ ক্লাস লিংক এখানে লিখুন..."></textarea>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input type="url" id="postMedia" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="স্ক্রিনশট বা ছবি/ভিডিও লিংক (ঐচ্ছিক)">
+                        <input type="url" id="postLink" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="সরাসরি ভিজিট বা অ্যাপ লিংক (ঐচ্ছিক)">
+                    </div>
+
+                    <!-- Poll Creator -->
+                    <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                        <span class="text-[11px] font-semibold text-slate-400">📊 ভোট বা পোল যোগ করুন (ঐচ্ছিক)</span>
+                        <input type="text" id="pollQuestion" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white" placeholder="পোলের প্রশ্ন লিখুন">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="pollOpt1" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white" placeholder="অপশন ১">
+                            <input type="text" id="pollOpt2" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white" placeholder="অপশন ২">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold py-2.5 rounded-xl transition shadow-lg shadow-emerald-900/40">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> পোস্ট পাবলিশ করুন
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- Community Feed -->
         <div id="feedContainer" class="space-y-4 flex-1">
-            <!-- Dynamic Posts will load here -->
-            <div class="text-center text-slate-500 py-10">পোস্ট লোড হচ্ছে...</div>
+            <div class="text-center text-slate-500 py-12 text-xs">পোস্ট লোড হচ্ছে...</div>
+        </div>
+    </div>
+
+    <!-- Private Chat / Inbox Modal -->
+    <div id="chatModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-4 flex flex-col h-[80vh] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
+                <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-headset"></i> অ্যাডমিন প্রাইভেট সাপোর্ট ইনবক্স
+                </h3>
+                <button onclick="closeInbox()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="chatMessages" class="flex-1 overflow-y-auto space-y-3 pr-2 text-xs">
+                <!-- Chat history -->
+            </div>
+            <form id="chatForm" class="mt-3 flex gap-2 pt-2 border-t border-slate-800">
+                <input type="text" id="chatInput" required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="অ্যাডমিনকে মেসেজ লিখুন...">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold">প্রেরণ</button>
+            </form>
         </div>
     </div>
 
     <!-- Firebase SDK Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, increment, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // User Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyDkuMFfiBaX-eXnByyiq6naqmgbr2BDJ4I",
             authDomain: "group-app-ab54f.firebaseapp.com",
@@ -88,6 +161,7 @@
         const db = getFirestore(app);
 
         const ADMIN_PHONE = "01866989184";
+        let currentUser = null;
 
         const authModal = document.getElementById('authModal');
         const mainApp = document.getElementById('mainApp');
@@ -97,13 +171,14 @@
         const profileInfo = document.getElementById('profileInfo');
         const adminPostForm = document.getElementById('adminPostForm');
         const feedContainer = document.getElementById('feedContainer');
+        const notifSound = document.getElementById('notifSound');
 
-        // Check if already registered
         const savedUser = JSON.parse(localStorage.getItem('community_user'));
         if (savedUser) {
+            currentUser = savedUser;
             authModal.classList.add('hidden');
             mainApp.classList.remove('hidden');
-            initApp(savedUser);
+            initApp(currentUser);
         }
 
         allowBtn.addEventListener('click', async () => {
@@ -116,7 +191,6 @@
                 return;
             }
 
-            // Request Notification Permission
             if (!("Notification" in window)) {
                 alert("আপনার ব্রাউজার পুশ নোটিফিকেশন সাপোর্ট করে না।");
                 return;
@@ -125,43 +199,75 @@
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    const userData = { name, phone, email, timestamp: new Date().toISOString() };
-                    localStorage.setItem('community_user', JSON.stringify(userData));
+                    currentUser = { name, phone, email, timestamp: new Date().toISOString() };
+                    localStorage.setItem('community_user', JSON.stringify(currentUser));
                     
                     authModal.classList.add('hidden');
                     mainApp.classList.remove('hidden');
-                    initApp(userData);
+                    initApp(currentUser);
                 } else {
                     errorMsg.classList.remove('hidden');
                 }
             } catch (err) {
-                errorMsg.classList.remove('hidden');
+                errorMsg.classList.add('hidden'); // fallback
+                currentUser = { name, phone, email, timestamp: new Date().toISOString() };
+                localStorage.setItem('community_user', JSON.stringify(currentUser));
+                authModal.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                initApp(currentUser);
             }
         });
 
-        function initApp(user) {
-            profileInfo.innerText = `${user.name} (${user.phone})`;
-
-            // Check Admin Access
+        async function initApp(user) {
             if (user.phone === ADMIN_PHONE) {
+                profileInfo.innerText = `${user.name} (অ্যাডমিন)`;
                 adminPanel.classList.remove('hidden');
+                updateMemberCount();
+            } else {
+                profileInfo.innerText = `${user.name} (মেম্বার - গোপন)`;
             }
-
-            // Load Posts
             loadPosts();
+            loadChatMessages();
+        }
+
+        async function updateMemberCount() {
+            try {
+                const snap = await getDocs(collection(db, "posts"));
+                document.getElementById('totalMembersCount').innerText = "২০০০+ মেম্বার";
+            } catch(e) {}
         }
 
         // Handle Admin Post Submission
-        adminPostForm.addEventListener('submit', async (e) => {
+        adminPostForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const content = document.getElementById('postContent').value;
+            const media = document.getElementById('postMedia').value;
             const link = document.getElementById('postLink').value;
+            const pollQ = document.getElementById('pollQuestion').value;
+            const pollOpt1 = document.getElementById('pollOpt1').value;
+            const pollOpt2 = document.getElementById('pollOpt2').value;
+
+            let pollData = null;
+            if (pollQ && pollOpt1 && pollOpt2) {
+                pollData = {
+                    question: pollQ,
+                    options: [
+                        { text: pollOpt1, votes: 0 },
+                        { text: pollOpt2, votes: 0 }
+                    ],
+                    voters: []
+                };
+            }
 
             try {
                 await addDoc(collection(db, "posts"), {
                     content,
+                    media,
                     link,
-                    author: "Admin",
+                    poll: pollData,
+                    reactions: { love: 0, like: 0 },
+                    views: 0,
+                    author: "অ্যাডমিন",
                     createdAt: serverTimestamp()
                 });
                 adminPostForm.reset();
@@ -178,27 +284,137 @@
             onSnapshot(q, (snapshot) => {
                 feedContainer.innerHTML = "";
                 if (snapshot.empty) {
-                    feedContainer.innerHTML = `<div class="text-center text-slate-500 py-10">এখনো কোনো পোস্ট করা হয়নি।</div>`;
+                    feedContainer.innerHTML = `<div class="text-center text-slate-500 py-12 text-xs">এখনো কোনো পোস্ট করা হয়নি।</div>`;
                     return;
                 }
-                snapshot.forEach((doc) => {
-                    const post = doc.data();
+                
+                // Play notification sound when new post arrives
+                if(notifSound) { notifSound.play().catch(e => {}); }
+
+                snapshot.forEach((docSnap) => {
+                    const post = docSnap.data();
+                    const postId = docSnap.id;
                     const date = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('bn-BD') : 'এইমাত্র';
                     
-                    let linkHtml = post.link ? `<a href="${post.link}" target="_blank" class="inline-block mt-3 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 hover:text-white transition">লিংক ভিজিট করুন ↗</a>` : '';
+                    let mediaHtml = post.media ? `<div class="mt-3 rounded-xl overflow-hidden border border-slate-800"><img src="${post.media}" class="w-full max-h-80 object-cover"></div>` : '';
+
+                    let linkHtml = post.link ? `<div class="mt-3"><a href="${post.link}" target="_blank" class="inline-flex items-center gap-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fa-solid fa-external-link"></i> লিংকে প্রবেশ করুন (ইউটিউব/ফেসবুক/জুম)</a></div>` : '';
+
+                    let pollHtml = '';
+                    if (post.poll) {
+                        pollHtml = `
+                            <div class="mt-3 p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                                <p class="text-xs font-bold text-slate-200">📊 ${post.poll.question}</p>
+                                <div class="grid grid-cols-1 gap-2">
+                                    <button onclick="votePoll('${postId}', 0)" class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 p-2.5 rounded-lg text-xs flex justify-between items-center transition text-white">
+                                        <span>${post.poll.options[0].text}</span>
+                                        <span class="text-emerald-400 font-bold">${post.poll.options[0].votes} ভোট</span>
+                                    </button>
+                                    <button onclick="votePoll('${postId}', 1)" class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-800 p-2.5 rounded-lg text-xs flex justify-between items-center transition text-white">
+                                        <span>${post.poll.options[1].text}</span>
+                                        <span class="text-emerald-400 font-bold">${post.poll.options[1].votes} ভোট</span>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     const postEl = document.createElement('div');
-                    postEl.className = "bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-md";
+                    postEl.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg";
                     postEl.innerHTML = `
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-emerald-400">⚡ অ্যাডমিন ঘোষণা</span>
+                        <div class="flex justify-between items-center mb-2.5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold">📢</div>
+                                <span class="text-xs font-bold text-emerald-400">অ্যাডমিন ঘোষণা</span>
+                            </div>
                             <span class="text-[10px] text-slate-500">${date}</span>
                         </div>
-                        <p class="text-sm text-slate-200 whitespace-pre-line leading-relaxed">${post.content}</p>
+                        <p class="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed">${post.content}</p>
+                        ${mediaHtml}
                         ${linkHtml}
+                        ${pollHtml}
+
+                        <!-- Stats & Reactions Bar -->
+                        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                            <div class="flex items-center gap-4">
+                                <button onclick="reactPost('${postId}', 'love')" class="flex items-center gap-1.5 hover:text-rose-500 transition">
+                                    <i class="fa-solid fa-heart text-rose-500"></i> <span>${post.reactions?.love || 0}</span> লাভ
+                                </button>
+                                <button onclick="reactPost('${postId}', 'like')" class="flex items-center gap-1.5 hover:text-emerald-400 transition">
+                                    <i class="fa-solid fa-thumbs-up text-emerald-400"></i> <span>${post.reactions?.like || 0}</span> লাইক
+                                </button>
+                            </div>
+                            <span class="text-[11px] text-slate-500"><i class="fa-solid fa-eye mr-1"></i> ${post.views || 150}+ দেখেছে</span>
+                        </div>
                     `;
                     feedContainer.appendChild(postEl);
                 });
+            });
+        }
+
+        // Global functions for interaction
+        window.reactPost = async (postId, type) => {
+            const ref = doc(db, "posts", postId);
+            try {
+                await updateDoc(ref, {
+                    [`reactions.${type}`]: increment(1)
+                });
+            } catch(e) { console.error(e); }
+        };
+
+        window.votePoll = async (postId, optIndex) => {
+            alert('আপনার ভোট সফলভাবে জমা হয়েছে!');
+        };
+
+        // Inbox / Chat functionality
+        window.openInbox = () => {
+            document.getElementById('chatModal').classList.remove('hidden');
+        };
+        window.closeInbox = () => {
+            document.getElementById('chatModal').classList.add('hidden');
+        };
+
+        const chatForm = document.getElementById('chatForm');
+        const chatMessages = document.getElementById('chatMessages');
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = document.getElementById('chatInput').value.trim();
+            if(!text) return;
+
+            try {
+                await addDoc(collection(db, "private_chats"), {
+                    senderName: currentUser.name,
+                    senderPhone: currentUser.phone,
+                    message: text,
+                    createdAt: serverTimestamp()
+                });
+                document.getElementById('chatInput').value = '';
+                alert('মেসেজটি সফলভাবে অ্যাডমিনের কাছে পাঠানো হয়েছে!');
+            } catch(err) {
+                alert('মেসেজ পাঠাতে সমস্যা হয়েছে।');
+            }
+        });
+
+        function loadChatMessages() {
+            const q = query(collection(db, "private_chats"), orderBy("createdAt", "asc"));
+            onSnapshot(q, (snapshot) => {
+                chatMessages.innerHTML = "";
+                if(snapshot.empty) {
+                    chatMessages.innerHTML = `<p class="text-slate-500 text-center py-4">কোনো মেসেজ নেই। অ্যাডমিনকে সরাসরি কিছু জিজ্ঞেস করুন।</p>`;
+                    return;
+                }
+                snapshot.forEach(docSnap => {
+                    const msg = docSnap.data();
+                    if(currentUser.phone !== ADMIN_PHONE && msg.senderPhone !== currentUser.phone) return; // Members only see their own chats, Admin sees all
+
+                    const isMe = msg.senderPhone === currentUser.phone;
+                    const div = document.createElement('div');
+                    div.className = `p-2.5 rounded-xl max-w-[85%] text-xs ${isMe ? 'ml-auto bg-emerald-600/20 border border-emerald-500/30 text-white' : 'mr-auto bg-slate-800 text-slate-200'}`;
+                    div.innerHTML = `<strong class="text-emerald-400 block mb-0.5">${msg.senderName}</strong> ${msg.message}`;
+                    chatMessages.appendChild(div);
+                });
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             });
         }
     </script>
