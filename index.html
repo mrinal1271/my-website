@@ -16,13 +16,14 @@
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-        appId: "6f039946-596a-4750-a70e-3eac2f827f6c",
-        // এখানে শুরুতে / দেওয়া হয়েছে, যা সাব-ফোল্ডারের জন্য খুবই জরুরি
-        serviceWorkerParam: { scope: "/my-website/" },
-        serviceWorkerPath: "/my-website/OneSignalSDKWorker.js", 
-        allowLocalhostAsSecureOrigin: true
-    });
+    try {
+        await OneSignal.init({
+            appId: "6f039946-596a-4750-a70e-3eac2f827f6c",
+            serviceWorkerParam: { scope: "/my-website/" },
+            serviceWorkerPath: "/my-website/OneSignalSDKWorker.js",
+            allowLocalhostAsSecureOrigin: true
+        });
+    } catch (e) { console.warn('OneSignal init failed:', e); }
 });
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/my-website/sw.js', { scope: '/my-website/' }).catch(()=>{});
@@ -44,6 +45,45 @@ if ('serviceWorker' in navigator) {
 <div id="toasts" class="fixed top-3 right-3 z-[100] space-y-2"></div>
 <div id="app" class="max-w-xl mx-auto min-h-screen bg-white relative"><div class="pt-40"><div class="spin"></div></div></div>
 
+<!-- ================= সেফটি নেট (লোডিং আটকে না থাকার জন্য) ================= -->
+<script>
+(function () {
+    var reported = false;
+
+    function showAppError(msg) {
+        if (reported) return;
+        var app = document.getElementById('app');
+        if (!app) return;
+        // শুধু স্পিনার থাকলেই error দেখাবে (নাহলে অ্যাপ লোড হয়ে গেছে)
+        if (!app.querySelector('.spin')) return;
+        reported = true;
+        var safeMsg = String(msg || 'Unknown error').replace(/[<>]/g, '');
+        app.innerHTML =
+            '<div class="p-8 pt-24 text-center">' +
+                '<div class="text-5xl mb-4">⚠️</div>' +
+                '<h2 class="text-lg font-bold mb-2 text-gray-800">লোড হতে সমস্যা হয়েছে</h2>' +
+                '<p class="text-gray-500 text-xs mb-5 break-all px-2">' + safeMsg + '</p>' +
+                '<button onclick="location.reload()" class="px-6 py-2.5 grad text-white rounded-lg font-medium shadow">🔄 আবার চেষ্টা করুন</button>' +
+                '<p class="text-gray-400 text-[11px] mt-4">Firebase Rules / ইন্টারনেট সংযোগ চেক করুন</p>' +
+            '</div>';
+    }
+
+    window.__showAppError = showAppError;
+
+    window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason;
+        var msg = r && r.message ? r.message : (r ? String(r) : 'Promise rejected');
+        setTimeout(function () { showAppError(msg); }, 800);
+    });
+
+    // শেষ ভরসা: ৭ সেকেন্ডেও স্পিনার ঘুরলে error দেখাবে
+    setTimeout(function () {
+        showAppError('লোড হতে বেশি সময় লাগছে');
+    }, 7000);
+})();
+</script>
+<!-- ==================================================================== -->
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, arrayUnion, arrayRemove, increment, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -56,7 +96,7 @@ const OS_APP_ID = "6f039946-596a-4750-a70e-3eac2f827f6c";
 const OS_REST_KEY = "os_v2_app_n4bzsrsznjdvbjyoh2wc7at7nqlfqna6t7be3kewtiulwjm6yplndusra3wqdspauw5z2jxf4ogwu5pt7texehzagjmvc5obsgys6gi";
 const SITE = "https://mrinal1271.github.io/my-website/";
 
-// ফায়ারবেস ইনিশিয়ালাইজ + Local Caching (সুপারফাস্ট পারফরম্যান্স)
+// ফায়ারবেস ইনিশিয়ালাইজ + Local Caching
 const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, { localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}) });
 const storage = getStorage(app);
@@ -85,7 +125,7 @@ function toast(msg, err) {
     d.textContent = msg; $('toasts').appendChild(d); setTimeout(() => d.remove(), 3500);
 }
 
-// ছবি কম্প্রেস করার ফাংশন (ফ্রি প্ল্যানে দ্রুত আপলোডের জন্য)
+// ছবি কম্প্রেস
 async function compressImage(file) {
     if (!file.type.startsWith('image/')) return file;
     return new Promise((resolve) => {
@@ -94,13 +134,13 @@ async function compressImage(file) {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // ছবি রিসাইজ
+                const MAX_WIDTH = 800;
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.6); // 60% কোয়ালিটি
+                canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.6);
             };
             img.src = e.target.result;
         };
@@ -108,12 +148,12 @@ async function compressImage(file) {
     });
 }
 
-// ফাইল আপলোড (কম্প্রেশন সহ)
+// ফাইল আপলোড
 async function upload(file, folder) {
     try {
         const compressedFile = await compressImage(file);
         const r = ref(storage, `${folder}/${Date.now()}_${compressedFile.name}`);
-        await uploadBytes(r, compressedFile); 
+        await uploadBytes(r, compressedFile);
         return await getDownloadURL(r);
     } catch (e) {
         toast('আপলোড ব্যর্থ! Storage Rules চেক করুন।', true);
@@ -121,32 +161,53 @@ async function upload(file, folder) {
     }
 }
 
-// নোটিফিকেশন পুশ (CORS বাইপাস প্রক্সি সহ)
+// নোটিফিকেশন
 async function sendOneSignalPush(title, message, postId) {
     try {
         const payload = { app_id: OS_APP_ID, included_segments: ["Subscribed Users"], headings: { en: title }, contents: { en: message }, url: postId ? `${SITE}?post=${postId}` : SITE };
-        await fetch("https://corsproxy.io/?url=https://onesignal.com/api/v1/notifications", { 
-            method:"POST", 
-            headers:{ "Content-Type":"application/json; charset=utf-8", "Authorization":"Basic " + OS_REST_KEY }, 
-            body: JSON.stringify(payload) 
+        await fetch("https://corsproxy.io/?url=https://onesignal.com/api/v1/notifications", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json; charset=utf-8", "Authorization":"Basic " + OS_REST_KEY },
+            body: JSON.stringify(payload)
         });
     } catch (e) { console.error("Push Error:", e); }
 }
 
+// ============ FIX: loadBatch এখন কখনো throw করবে না ============
 async function loadBatch() {
-    const r = doc(db, 'settings', 'currentBatch'), s = await getDoc(r);
-    if (s.exists()) batchId = s.data().batchId;
-    else { batchId = 'b' + Date.now(); await setDoc(r, { batchId, startedAt: serverTimestamp() }); }
+    try {
+        const r = doc(db, 'settings', 'currentBatch'), s = await getDoc(r);
+        if (s.exists()) batchId = s.data().batchId;
+        else {
+            batchId = 'b' + Date.now();
+            await setDoc(r, { batchId, startedAt: serverTimestamp() });
+        }
+    } catch (e) {
+        console.warn('loadBatch failed, using fallback batchId:', e);
+        // fallback — অ্যাপ চলতে থাকবে
+        if (!batchId) batchId = 'b' + Date.now();
+    }
 }
 
+// ============ FIX: boot এখন try/catch দিয়ে সুরক্ষিত ============
 async function boot() {
-    await loadBatch();
-    const id = localStorage.getItem('cp_uid');
-    if (id) {
-        const s = await getDoc(doc(db, 'users', id));
-        if (s.exists()) return enter({ id, ...s.data() });
-        localStorage.removeItem('cp_uid');
+    try {
+        await loadBatch();
+    } catch (e) {
+        console.warn('loadBatch unexpected error:', e);
+        if (!batchId) batchId = 'b' + Date.now();
     }
+    try {
+        const id = localStorage.getItem('cp_uid');
+        if (id) {
+            const s = await getDoc(doc(db, 'users', id));
+            if (s.exists()) return enter({ id, ...s.data() });
+            localStorage.removeItem('cp_uid');
+        }
+    } catch (e) {
+        console.warn('user load failed:', e);
+    }
+    // যেকোনো অবস্থাতেই auth screen দেখাবে
     showAuth();
 }
 
@@ -179,14 +240,14 @@ async function register() {
     const name = $('rn').value.trim(), phone = $('rp').value.trim().replace(/\s/g,''), gmail = $('rg').value.trim();
     if (!name || !phone) return toast('নাম ও ফোন নম্বর আবশ্যক', true);
     if (!/^01\d{9}$/.test(phone)) return toast('সঠিক ১১ ডিজিটের ফোন নম্বর দিন', true);
-    
+
     let perm = Notification.permission;
     if (perm !== 'granted') {
         const m = document.createElement('div');
         m.className = 'fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-6';
         m.innerHTML = `<div class="bg-white rounded-2xl p-6 text-center max-w-sm"><div class="text-5xl mb-3">🔔</div><p class="font-semibold mb-5">আপডেট পেতে নোটিফিকেশন এলাও করুন</p><button id="al" class="w-full grad text-white py-3 rounded-lg font-semibold">✅ এলাও করুন</button><button id="sk" class="w-full mt-2 text-gray-500">স্কিপ করুন</button></div>`;
         document.body.appendChild(m);
-        
+
         $('al').onclick = async () => {
             try { perm = await Notification.requestPermission(); } catch (e) {}
             m.remove(); await saveUser(name, phone, gmail);
@@ -204,7 +265,10 @@ async function saveUser(name, phone, gmail) {
         const data = { name, phone, gmail, batchId, blocked: false, joinedAt: serverTimestamp(), lastSeen: serverTimestamp(), viewedPosts: [] };
         const r = await addDoc(collection(db, 'users'), data);
         enter({ id: r.id, ...data, joinedAt: null });
-    } catch (e) { toast('সমস্যা হয়েছে, আবার চেষ্টা করুন', true); }
+    } catch (e) {
+        console.error('saveUser error:', e);
+        toast('সমস্যা হয়েছে: ' + (e.message || 'অজানা ত্রুটি'), true);
+    }
 }
 
 function renderShell() {
@@ -250,8 +314,8 @@ function startListeners() {
     });
     onSnapshot(query(collection(db, 'posts'), orderBy('createdAt', 'desc')), s => {
         posts = s.docs.map(d => ({ id: d.id, ...d.data() }));
-        if (!firstPostLoad) s.docChanges().forEach(c => { 
-            if (c.type === 'added' && !c.doc.metadata.hasPendingWrites) toast('📢 নতুন পোস্ট এসেছে'); 
+        if (!firstPostLoad) s.docChanges().forEach(c => {
+            if (c.type === 'added' && !c.doc.metadata.hasPendingWrites) toast('📢 নতুন পোস্ট এসেছে');
         });
         firstPostLoad = false; if (tab === 'home') { renderHome(); handleDeepLink(); }
     });
@@ -273,7 +337,7 @@ function renderHome() {
     const m = $('main');
     if (!posts.length) { m.innerHTML = `<div class="text-center text-gray-400 pt-32"><div class="text-5xl mb-2">📭</div>এখনো কোনো পোস্ট নেই</div>`; return; }
     m.innerHTML = posts.map(postHTML).join('');
-    
+
     m.querySelectorAll('[data-like]').forEach(b => b.onclick = () => toggleLike(b.dataset.like));
     m.querySelectorAll('[data-del]').forEach(b => b.onclick = () => confirm('পোস্টটি মুছে ফেলবেন?') && deleteDoc(doc(db, 'posts', b.dataset.del)));
     m.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
@@ -282,8 +346,8 @@ function renderHome() {
     });
     m.querySelectorAll('[data-share]').forEach(b => b.onclick = async () => {
         const url = `${SITE}?post=${b.dataset.share}`;
-        if (navigator.share) { try { await navigator.share({ title: group.name, url }); } catch(e){} } 
-        else { navigator.clipboard.writeText(url); toast('লিংক কপি হয়েছে!'); }
+        if (navigator.share) { try { await navigator.share({ title: group.name, url }); } catch(e){} }
+        else { navigator.clipboard.writeText(url); toast('লিংক কপি হয়েছে!'); }
     });
     m.querySelectorAll('[data-vote]').forEach(b => b.onclick = () => vote(b.dataset.pid, b.dataset.vote));
     m.querySelectorAll('[data-full]').forEach(b => b.onclick = () => openFull(b.dataset.full, b.dataset.kind));
@@ -303,14 +367,14 @@ function postHTML(p) {
             return `<button ${voted ? 'disabled' : ''} data-pid="${p.id}" data-vote="${i}" class="relative block w-full text-left border rounded-lg p-2 mb-1 overflow-hidden mt-2"><div class="absolute inset-y-0 left-0 bg-indigo-100" style="width:${voted ? pct : 0}%"></div><span class="relative">${esc(o)}</span>${voted ? `<span class="relative float-right text-sm">${bn(pct)}%</span>` : ''}</button>`;
         }).join('') + `<div class="text-xs text-gray-400 mt-1">${voted ? 'আপনি ভোট দিয়েছেন · ' : ''}মোট ${bn(total)} ভোট</div>`;
     }
-    
+
     let adminOpts = isAdmin ? `<button data-edit="${p.id}" data-text="${esc(p.text || '')}" class="text-indigo-500 mr-3">✏️ এডিট</button><button data-del="${p.id}" class="text-red-500">🗑️ মুছুন</button>` : '';
-    
+
     return `<article id="post-${p.id}" class="p-4 border-b bg-white"><div class="flex justify-between text-xs text-gray-400 mb-2"><span>${esc(group.name)}</span><span>${ago(p.createdAt)}</span></div>${body}
     <div class="flex items-center mt-4 text-sm text-gray-600">
         <button data-like="${p.id}" class="mr-4">${liked ? '❤️' : '🤍'} ${bn((p.likes || []).length)}</button>
         <span class="mr-4">👁️ ${bn(p.views || 0)}</span>
-        <button data-share="${p.id}" class="text-blue-500 mr-auto">🔗 শেয়ার</button>
+        <button data-share="${p.id}" class="text-blue-500 mr-auto">🔗 শেয়ার</button>
         ${adminOpts}
     </div></article>`;
 }
@@ -346,16 +410,16 @@ function renderMembers() {
     $('main').innerHTML = `<div class="p-4 font-semibold border-b bg-gray-50">মোট সদস্য: ${bn(users.length)} জন</div>` + users.map(u => `
     <div class="flex items-center gap-3 p-3 border-b"><div class="w-10 h-10 rounded-full grad text-white flex items-center justify-center font-bold text-lg">${esc((u.name || '?')[0])}</div>
     <div class="flex-1 ${u.blocked ? 'text-red-600' : ''}"><div class="font-medium">${esc(u.name)}${u.phone === ADMIN_PHONE ? ' <span class="text-xs text-indigo-500 bg-indigo-100 px-1 rounded">অ্যাডমিন</span>' : ''}</div>
-    <div class="text-xs text-gray-500">${u.blocked ? 'ব্লক করা হয়েছে' : 'সদস্য'}</div></div>
+    <div class="text-xs text-gray-500">${u.blocked ? 'ব্লক করা হয়েছে' : 'সদস্য'}</div></div>
     </div>`).join('');
 }
 
 function renderSupport() {
-    if (isAdmin && !chatWith) { 
+    if (isAdmin && !chatWith) {
         const g = {}; allMsgs.forEach(m => { (g[m.userId] ||= []).push(m); });
         const rows = Object.entries(g).map(([uid, ms]) => { ms.sort((a, b) => (a.createdAt?.toMillis?.() || Infinity) - (b.createdAt?.toMillis?.() || Infinity)); return [uid, ms]; })
             .sort((a, b) => (b[1].at(-1).createdAt?.toMillis?.() || Infinity) - (a[1].at(-1).createdAt?.toMillis?.() || Infinity));
-        
+
         $('main').innerHTML = `<div class="p-4 font-semibold border-b bg-gray-50">📥 সাপোর্ট ইনবক্স</div>` + (rows.length ? rows.map(([uid, ms]) => {
             const unread = ms.filter(m => m.sender === 'user' && !m.seen).length, l = ms.at(-1);
             return `<div data-u="${uid}" class="flex items-center gap-3 p-3 border-b cursor-pointer hover:bg-gray-50"><div class="w-10 h-10 rounded-full grad text-white flex items-center justify-center font-bold">${esc((ms[0].userName || '?')[0])}</div><div class="flex-1 min-w-0"><div class="font-medium">${esc(ms.find(m => m.userName)?.userName || 'ইউজার')}</div><div class="text-sm text-gray-500 truncate">${esc(l.text)}</div></div>${unread ? `<span class="bg-indigo-600 text-white text-xs rounded-full px-2 py-0.5">${bn(unread)}</span>` : ''}</div>`;
@@ -363,12 +427,12 @@ function renderSupport() {
         $('main').querySelectorAll('[data-u]').forEach(r => r.onclick = () => { chatWith = r.dataset.u; renderSupport(); });
         return;
     }
-    
+
     const uid = isAdmin ? chatWith : me.id, name = isAdmin ? (users.find(u => u.id === uid)?.name || 'ইউজার') : 'অ্যাডমিন';
     const ms = allMsgs.filter(m => m.userId === uid).sort((a, b) => (a.createdAt?.toMillis?.() || Infinity) - (b.createdAt?.toMillis?.() || Infinity));
     const other = isAdmin ? 'user' : 'admin';
     ms.forEach(m => { if (m.sender === other && !m.seen) updateDoc(doc(db, 'supportMessages', m.id), { seen: true }).catch(()=>{}); });
-    
+
     $('main').innerHTML = `<div class="flex flex-col" style="height:calc(100vh - 140px)">
     <div class="p-3 border-b flex items-center gap-3 bg-white sticky top-0 z-10 shadow-sm">${isAdmin ? '<button id="bk" class="p-1 text-lg">⬅️</button>' : ''}<b class="text-lg">${esc(name)}</b></div>
     <div id="cmsg" class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#eef0f7]">${ms.length ? ms.map(m => {
@@ -376,10 +440,10 @@ function renderSupport() {
         return `<div class="flex ${mine ? 'justify-end' : ''}"><div class="${mine ? 'bubble-me' : 'bubble-them'} px-4 py-2 max-w-[80%] shadow-sm"><div class="whitespace-pre-wrap">${esc(m.text)}</div><div class="text-[10px] text-gray-500 text-right mt-1">${clock(m.createdAt)} ${mine ? `<span class="${m.seen ? 'text-blue-500' : ''}">✔</span>` : ''}</div></div></div>`;
     }).join('') : `<div class="text-center text-gray-400 pt-16">মেসেজ লিখে পাঠানো শুরু করুন</div>`}</div>
     <div class="p-3 flex gap-2 border-t bg-white"><input id="ci" class="flex-1 border border-gray-300 focus:outline-none focus:border-indigo-500 rounded-full px-4 py-2" placeholder="মেসেজ লিখুন..."><button id="cs" class="grad text-white rounded-full px-5 font-medium shadow-md">পাঠান</button></div></div>`;
-    
+
     const box = $('cmsg'); box.scrollTop = box.scrollHeight;
     if ($('bk')) $('bk').onclick = () => { chatWith = null; renderSupport(); };
-    
+
     const send = async () => {
         const t = $('ci').value.trim(); if (!t) return; $('ci').value = '';
         await addDoc(collection(db, 'supportMessages'), { userId: uid, userName: isAdmin ? name : me.name, text: t, sender: isAdmin ? 'admin' : 'user', seen: false, createdAt: serverTimestamp() });
@@ -404,15 +468,15 @@ function renderAdmin() {
       <input id="gname" class="w-full border rounded-lg p-2.5 mb-3" placeholder="গ্রুপের নাম" value="${esc(group.name)}">
       <textarea id="gdesc" class="w-full border rounded-lg p-2.5 mb-3" placeholder="গ্রুপের বিবরণ">${esc(group.description)}</textarea>
       <input id="gimg" type="file" accept="image/*" class="mb-3 w-full text-sm"><button id="gsave" class="w-full grad text-white py-2.5 rounded-lg font-medium shadow">সেভ করুন</button></section>
-    
+
     <section class="bg-white p-4 rounded-xl shadow-sm"><h3 class="font-bold mb-3 text-lg border-b pb-2">✍️ নতুন পোস্ট তৈরি</h3>
-      <select id="ptype" class="w-full border rounded-lg p-2.5 mb-3"><option value="text">শুধুমাত্র টেক্সট</option><option value="image">ছবি সহ পোস্ট</option><option value="video">ভিডিও সহ পোস্ট</option><option value="link">লিংক শেয়ার</option><option value="poll">পোল / ভোটিং</option></select>
+      <select id="ptype" class="w-full border rounded-lg p-2.5 mb-3"><option value="text">শুধুমাত্র টেক্সট</option><option value="image">ছবি সহ পোস্ট</option><option value="video">ভিডিও সহ পোস্ট</option><option value="link">লিংক শেয়ার</option><option value="poll">পোল / ভোটিং</option></select>
       <textarea id="ptext" class="w-full border rounded-lg p-2.5 mb-3" placeholder="এখানে কিছু লিখুন..."></textarea>
       <div id="pfile" class="hidden mb-3"><input id="pf" type="file" class="w-full text-sm"></div>
       <input id="plink" class="hidden w-full border rounded-lg p-2.5 mb-3" placeholder="https://...">
       <div id="ppoll" class="hidden mb-3"><div id="popts"></div><button id="padd" class="text-indigo-600 text-sm font-medium mt-2">➕ আরো অপশন যোগ করুন</button></div>
       <button id="pgo" class="w-full grad text-white py-2.5 rounded-lg font-medium shadow">পোস্ট পাবলিশ করুন</button></section>
-    
+
     <section class="bg-white p-4 rounded-xl shadow-sm"><h3 class="font-bold mb-3 text-lg border-b pb-2">👥 সদস্য ব্যবস্থাপনা (মোট ${bn(users.length)})</h3>
       <div class="space-y-2">
       ${users.filter(u => u.phone !== ADMIN_PHONE).map(u => `
@@ -428,21 +492,21 @@ function renderAdmin() {
         </div>
       `).join('') || '<p class="text-gray-400 text-sm py-2">কোনো সদস্য নেই</p>'}</div></section>
     </div>`;
-    
+
     $('main').querySelectorAll('[data-blk]').forEach(b => b.onclick = () => { const u = users.find(x => x.id === b.dataset.blk); updateDoc(doc(db, 'users', u.id), { blocked: !u.blocked }); });
     $('main').querySelectorAll('[data-msg]').forEach(b => b.onclick = () => { tab = 'support'; chatWith = b.dataset.msg; render(); });
-    
-    $('gsave').onclick = saveGroup; 
+
+    $('gsave').onclick = saveGroup;
     $('pgo').onclick = createPost;
     $('padd').onclick = () => { pollOpts++; drawOpts(); };
-    $('ptype').onchange = e => { postType = e.target.value; typeUI(); }; 
+    $('ptype').onchange = e => { postType = e.target.value; typeUI(); };
     $('ptype').value = postType; typeUI(); drawOpts();
 }
 
 function typeUI() {
     $('pfile').classList.toggle('hidden', !['image', 'video'].includes(postType));
     $('pf').accept = postType === 'image' ? 'image/*' : 'video/*';
-    $('plink').classList.toggle('hidden', postType !== 'link'); 
+    $('plink').classList.toggle('hidden', postType !== 'link');
     $('ppoll').classList.toggle('hidden', postType !== 'poll');
 }
 function drawOpts() { $('popts').innerHTML = Array.from({ length: pollOpts }, (_, i) => `<input class="po w-full border rounded-lg p-2.5 mb-2 bg-gray-50" placeholder="অপশন ${bn(i + 1)}">`).join(''); }
@@ -462,23 +526,24 @@ async function createPost() {
     const text = $('ptext').value.trim(), p = { type: postType, text, likes: [], votes: {}, views: 0, viewedBy: [], createdAt: serverTimestamp(), batchId };
     try {
         if (postType === 'text' && !text) return toast('কিছু লিখুন', true);
-        btn.disabled = true; btn.innerText = 'পোস্ট হচ্ছে... தயவுசெய்து অপেক্ষা করুন';
-        
+        btn.disabled = true; btn.innerText = 'পোস্ট হচ্ছে... দয়া করে অপেক্ষা করুন';
+
         if (['image', 'video'].includes(postType)) {
             const f = $('pf').files[0]; if (!f) { btn.disabled = false; btn.innerText = 'পোস্ট পাবলিশ করুন'; return toast('ফাইল নির্বাচন করুন', true); }
-            toast('মিডিয়া আপলোড হচ্ছে (দ্রুত হবে)...'); 
+            toast('মিডিয়া আপলোড হচ্ছে (দ্রুত হবে)...');
             p[postType === 'image' ? 'imageUrl' : 'videoUrl'] = await upload(f, 'posts');
         }
         if (postType === 'link') { p.linkUrl = $('plink').value.trim(); if (!/^https?:\/\//.test(p.linkUrl)) { btn.disabled = false; btn.innerText = 'পোস্ট পাবলিশ করুন'; return toast('সঠিক লিংক দিন', true); } }
         if (postType === 'poll') { p.options = [...document.querySelectorAll('.po')].map(i => i.value.trim()).filter(Boolean); if (p.options.length < 2 || !text) { btn.disabled = false; btn.innerText = 'পোস্ট পাবলিশ করুন'; return toast('প্রশ্ন ও কমপক্ষে ২টি অপশন দিন', true); } }
-        
+
         const r = await addDoc(collection(db, 'posts'), p);
-        sendOneSignalPush(group.name, text || (postType === 'image' ? 'নতুন একটি ছবি পোস্ট করা হয়েছে' : 'নতুন পোস্ট এসেছে'), r.id);
-        
-        toast('পোস্ট হয়েছে ✅'); 
+        sendOneSignalPush(group.name, text || (postType === 'image' ? 'নতুন একটি ছবি পোস্ট করা হয়েছে' : 'নতুন পোস্ট এসেছে'), r.id);
+
+        toast('পোস্ট হয়েছে ✅');
         pollOpts = 2; postType = 'text'; tab = 'home'; render();
-    } catch (e) { 
-        toast('ব্যর্থ! Storage Rules ঠিক করুন।', true); 
+    } catch (e) {
+        console.error('createPost error:', e);
+        toast('ব্যর্থ! Storage Rules ঠিক করুন।', true);
         btn.disabled = false; btn.innerText = 'পোস্ট পাবলিশ করুন';
     }
 }
@@ -496,7 +561,19 @@ function bindInstall() {
         };
     });
 }
-boot();
+
+// ============ FIX: boot() কে ultimate try/catch দিয়ে ঘেরা ============
+(async function safeBoot() {
+    try {
+        await boot();
+    } catch (e) {
+        console.error('safeBoot caught:', e);
+        // শেষ চেষ্টা — সরাসরি auth screen দেখাও
+        try { showAuth(); } catch (err) {
+            if (window.__showAppError) window.__showAppError(e.message || 'Startup failed');
+        }
+    }
+})();
 </script>
 </body>
 </html>
