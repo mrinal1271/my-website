@@ -4,24 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>কমিউনিটি প্ল্যাটফর্ম</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- OneSignal SDK -->
+
+    <!-- OneSignal SDK (আপনার সাবফোল্ডারের জন্য সঠিক scope/path) -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function(OneSignal) {
-            await OneSignal.init({
-                appId: "6f039946-596a-4750-a70e-3eac2f827f6c",
-                serviceWorkerParam: { scope: "/my-website/" },
-                serviceWorkerPath: "my-website/OneSignalSDKWorker.js",
-                allowLocalhostAsSecureOrigin: true
-            });
+            try {
+                await OneSignal.init({
+                    appId: "6f039946-596a-4750-a70e-3eac2f827f6c",
+                    serviceWorkerParam: { scope: "/my-website/" },
+                    serviceWorkerPath: "my-website/OneSignalSDKWorker.js",
+                    allowLocalhostAsSecureOrigin: true
+                });
+                console.log("OneSignal initialized");
+            } catch (e) {
+                console.error("OneSignal init error:", e);
+            }
         });
     </script>
-    
+
     <script type="module">
+        // ============ FIREBASE ============
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
         import {
             getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
@@ -32,7 +38,6 @@
             getStorage, ref, uploadBytes, getDownloadURL
         } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
-        // ============ FIREBASE CONFIG ============
         const firebaseConfig = {
             projectId: "group-app-ab54f",
             authDomain: "group-app-ab54f.firebaseapp.com",
@@ -41,17 +46,18 @@
             appId: "1:1014775593877:web:f88fa6cd7b812a7ab3549c",
             measurementId: "G-WNE7ZNZK46"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // ============ ONESIGNAL CONFIG ============
+        // ============ CONFIG ============
+        const ADMIN_PHONE = "01866989184";
         const ONESIGNAL_APP_ID = "6f039946-596a-4750-a70e-3eac2f827f6c";
         const ONESIGNAL_REST_API_KEY = "os_v2_app_n4bzsrsznjdvbjyoh2wc7at7nqlfqna6t7be3kewtiulwjm6yplndusra3wqdspauw5z2jxf4ogwu5pt7texehzagjmvc5obsgys6gi";
         const SITE_URL = "https://mrinal1271.github.io/my-website/";
 
-        // ============ GLOBAL STATE ============
-        const ADMIN_PHONE = "01866989184";
+        // ============ STATE ============
         let currentUser = null;
         let isAdmin = false;
         let pendingRegistration = null;
@@ -59,7 +65,7 @@
         let isFirstPostLoad = true;
         let lastPostTime = 0;
 
-        // ============ NOTIFICATION SOUND (Web Audio API) ============
+        // ============ SOUND (Web Audio API — কোনো base64 নেই) ============
         function playNotificationSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -67,34 +73,33 @@
                 const gain = ctx.createGain();
                 osc.connect(gain);
                 gain.connect(ctx.destination);
-                osc.frequency.value = 880;
                 osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.15);
                 gain.gain.setValueAtTime(0.3, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.5);
-                setTimeout(() => {
-                    try { ctx.close(); } catch(e) {}
-                }, 1000);
+                setTimeout(() => { try { ctx.close(); } catch(e){} }, 1000);
             } catch (e) {
                 console.log('Sound error:', e);
             }
         }
 
-        // ============ UTILITIES ============
+        // ============ UTILS ============
         function getInitials(name) {
             return (name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         }
 
-        function formatTime(timestamp) {
-            if (!timestamp) return '';
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            const diff = Math.floor((new Date() - date) / 1000);
+        function formatTime(ts) {
+            if (!ts) return '';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            const diff = Math.floor((new Date() - d) / 1000);
             if (diff < 60) return 'এইমাত্র';
-            if (diff < 3600) return `${Math.floor(diff / 60)} মিনিট আগে`;
-            if (diff < 86400) return `${Math.floor(diff / 3600)} ঘন্টা আগে`;
-            if (diff < 604800) return `${Math.floor(diff / 86400)} দিন আগে`;
-            return date.toLocaleDateString('bn-BD');
+            if (diff < 3600) return `${Math.floor(diff/60)} মিনিট আগে`;
+            if (diff < 86400) return `${Math.floor(diff/3600)} ঘন্টা আগে`;
+            if (diff < 604800) return `${Math.floor(diff/86400)} দিন আগে`;
+            return d.toLocaleDateString('bn-BD');
         }
 
         function escapeHtml(text) {
@@ -103,19 +108,16 @@
             return div.innerHTML;
         }
 
-        function showToast(message, type = 'info') {
-            const colors = {
-                info: 'bg-blue-500', success: 'bg-green-500',
-                error: 'bg-red-500', warning: 'bg-yellow-500'
-            };
-            const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-[9999] text-sm font-medium`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
+        function showToast(msg, type = 'info') {
+            const colors = { info:'bg-blue-500', success:'bg-green-500', error:'bg-red-500', warning:'bg-yellow-500' };
+            const t = document.createElement('div');
+            t.className = `fixed top-4 right-4 ${colors[type]} text-white px-5 py-3 rounded-lg shadow-lg z-[9999] text-sm font-medium`;
+            t.textContent = msg;
+            document.body.appendChild(t);
             setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(() => toast.remove(), 300);
+                t.style.transition = 'opacity 0.3s';
+                t.style.opacity = '0';
+                setTimeout(() => t.remove(), 300);
             }, 3000);
         }
 
@@ -136,12 +138,12 @@
                 showToast('নোটিফিকেশন ব্লক করা আছে। ব্রাউজার সেটিংস থেকে অনুমতি দিন।', 'error');
                 return false;
             }
-            const permission = await Notification.requestPermission();
-            return permission === 'granted';
+            const p = await Notification.requestPermission();
+            return p === 'granted';
         }
 
-        // ============ REGISTRATION ============
-        async function handleRegistrationFormSubmit(e) {
+        // ============ REGISTRATION FLOW ============
+        function onFormSubmit(e) {
             e.preventDefault();
             const name = document.getElementById('reg-name').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
@@ -154,22 +156,25 @@
 
             pendingRegistration = { name, phone, gmail };
 
+            // Show mandatory popup
             const popup = document.getElementById('notification-popup');
             popup.classList.remove('hidden');
             popup.classList.add('flex');
         }
 
-        async function onNotificationAllow() {
+        async function onAllowNotificationClick() {
             const granted = await requestNotificationPermission();
             if (!granted) {
                 showToast('গ্রুপে যোগ দিতে নোটিফিকেশন অনুমতি আবশ্যক', 'error');
                 return;
             }
 
+            // Hide popup
             const popup = document.getElementById('notification-popup');
             popup.classList.add('hidden');
             popup.classList.remove('flex');
 
+            // Complete registration
             await completeRegistration();
         }
 
@@ -211,36 +216,35 @@
 
                 connectOneSignal(currentUser.id);
                 initializeAppUI();
+                showToast('গ্রুপে যোগ দিতে সফল হয়েছে!', 'success');
             } catch (err) {
                 console.error('Registration error:', err);
-                showToast('নিবন্ধনে সমস্যা হয়েছে: ' + err.message, 'error');
+                showToast('নিবন্ধনে সমস্যা: ' + (err.message || 'Unknown'), 'error');
             }
         }
 
-        // ============ ONESIGNAL CONNECTION ============
+        // ============ ONESIGNAL CONNECT ============
         function connectOneSignal(userId) {
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function(OneSignal) {
                 try {
                     await OneSignal.login(userId);
-                    console.log('OneSignal user connected:', userId);
+                    console.log('OneSignal user logged in:', userId);
                 } catch (e) {
                     console.error('OneSignal login error:', e);
                 }
             });
         }
 
-        // ============ ONESIGNAL PUSH SENDER ============
+        // ============ SEND PUSH ============
         async function sendOneSignalPush(title, message, postId) {
             try {
                 const payload = {
                     app_id: ONESIGNAL_APP_ID,
                     included_segments: ["Subscribed Users"],
-                    headings: { en: title, bn: title },
-                    contents: { en: message, bn: message },
-                    url: postId ? `${SITE_URL}?post=${postId}` : SITE_URL,
-                    chrome_web_icon: SITE_URL + "icon.png",
-                    chrome_web_badge: SITE_URL + "icon.png"
+                    headings: { en: title },
+                    contents: { en: message },
+                    url: postId ? `${SITE_URL}?post=${postId}` : SITE_URL
                 };
                 console.log('Sending push:', payload);
                 const res = await fetch("https://onesignal.com/api/v1/notifications", {
@@ -254,18 +258,17 @@
                 const data = await res.json();
                 console.log('OneSignal response:', data);
                 if (data.errors) {
-                    console.error('OneSignal errors:', data.errors);
                     showToast('পুশ সমস্যা: ' + JSON.stringify(data.errors), 'error');
                 } else {
-                    showToast('পুশ পাঠানো হয়েছে: ' + (data.recipients || 0) + ' জন', 'success');
+                    showToast(`পুশ পাঠানো হয়েছে (${data.recipients || 0} জন)`, 'success');
                 }
             } catch (e) {
                 console.error('Push error:', e);
-                showToast('পুশ পাঠাতে সমস্যা', 'error');
+                showToast('পুশ পাঠানো ব্যর্থ', 'error');
             }
         }
 
-        // ============ INITIALIZE UI ============
+        // ============ INIT UI ============
         function initializeAppUI() {
             isAdmin = currentUser.phone === ADMIN_PHONE;
             const nameEl = document.getElementById('user-name');
@@ -280,10 +283,10 @@
             listenForNewPosts();
             handleDeepLink();
 
+            // Foreground notification
             OneSignalDeferred.push(function(OneSignal) {
-                OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+                OneSignal.Notifications.addEventListener('foregroundWillDisplay', () => {
                     playNotificationSound();
-                    showToast('📢 নতুন পোস্ট এসেছে!', 'info');
                 });
             });
         }
@@ -293,7 +296,6 @@
             const params = new URLSearchParams(window.location.search);
             const postId = params.get('post');
             if (!postId) return;
-
             setTimeout(() => {
                 const el = document.querySelector(`[data-post-id="${postId}"]`);
                 if (el) {
@@ -320,14 +322,14 @@
                     return;
                 }
                 container.innerHTML = '';
-                snapshot.forEach(docSnap => {
-                    const post = { id: docSnap.id, ...docSnap.data() };
+                snapshot.forEach(d => {
+                    const post = { id: d.id, ...d.data() };
                     container.appendChild(createPostElement(post));
                     trackPostView(post.id);
                 });
             }, (err) => {
                 console.error('Post load error:', err);
-                container.innerHTML = '<p class="text-center text-red-500 py-8">পোস্ট লোড করতে সমস্যা। Firestore Rules চেক করুন।</p>';
+                container.innerHTML = '<p class="text-center text-red-500 py-8">পোস্ট লোড সমস্যা। Firestore Rules চেক করুন।</p>';
             });
             unsubscribers.push(unsub);
         }
@@ -510,9 +512,8 @@
                 };
                 const newDoc = await addDoc(collection(db, 'posts'), postData);
 
-                const pushTitle = 'নতুন পোস্ট 📢';
                 const pushBody = text ? text.substring(0, 100) : (postType === 'poll' ? 'নতুন ভোট এসেছে!' : 'নতুন পোস্ট এসেছে!');
-                await sendOneSignalPush(pushTitle, pushBody, newDoc.id);
+                await sendOneSignalPush('নতুন পোস্ট 📢', pushBody, newDoc.id);
 
                 document.getElementById('post-text').value = '';
                 document.getElementById('post-link').value = '';
@@ -523,21 +524,21 @@
                 showToast('পোস্ট তৈরি হয়েছে!', 'success');
             } catch (e) {
                 console.error(e);
-                showToast('পোস্ট করতে সমস্যা: ' + e.message, 'error');
+                showToast('পোস্ট সমস্যা: ' + (e.message || 'Unknown'), 'error');
             }
         }
 
         // ============ ADMIN: NEW BATCH ============
         async function startNewBatch() {
             if (!isAdmin) return;
-            if (!confirm('নতুন ব্যাচ শুরু করলে পুরানো সদস্যরা ব্লক হবে। নিশ্চিত?')) return;
+            if (!confirm('নতুন ব্যাচ শুরু করলে পুরনো সদস্যরা ব্লক হবে। নিশ্চিত?')) return;
             const newBatchId = 'batch_' + Date.now();
             await setDoc(doc(db, 'settings', 'currentBatch'), { batchId: newBatchId, startedAt: serverTimestamp() });
             currentUser.batchId = newBatchId;
             showToast('নতুন ব্যাচ শুরু হয়েছে!', 'success');
         }
 
-        // ============ ADMIN: LOAD DATA ============
+        // ============ ADMIN DATA ============
         async function loadAdminData() {
             if (!isAdmin) return;
             try {
@@ -580,14 +581,16 @@
                     container.appendChild(div);
                 });
             } catch (e) {
+                console.error(e);
                 container.innerHTML = '<p class="text-red-500 text-sm text-center py-4">লোড করতে সমস্যা</p>';
             }
         }
 
         async function openSupportChat(userId, userName) {
             showScreen('screen-support-chat');
-            document.getElementById('support-chat-name').textContent = userName;
-            document.getElementById('support-chat-name').dataset.userId = userId;
+            const nameEl = document.getElementById('support-chat-name');
+            nameEl.textContent = userName;
+            nameEl.dataset.userId = userId; // ✅ Fix: userId সেভ করা
             const container = document.getElementById('support-chat-messages');
             container.innerHTML = '';
             try {
@@ -614,6 +617,10 @@
             const text = input.value.trim();
             if (!text) return;
             const userId = document.getElementById('support-chat-name').dataset.userId;
+            if (!userId) {
+                showToast('ইউজার আইডি পাওয়া যায়নি', 'error');
+                return;
+            }
             await addDoc(collection(db, 'supportMessages'), {
                 userId, userName: currentUser.name, text, sender: 'admin',
                 seen: false, delivered: true, createdAt: serverTimestamp()
@@ -654,7 +661,7 @@
             }
         }
 
-        // ============ EXPOSE TO WINDOW ============
+        // ============ EXPOSE ============
         window.toggleLike = toggleLike;
         window.votePoll = votePoll;
         window.deletePost = deletePost;
@@ -667,8 +674,9 @@
 
         // ============ DOM READY ============
         document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('registration-form').addEventListener('submit', handleRegistrationFormSubmit);
-            document.getElementById('btn-enable-notification').addEventListener('click', onNotificationAllow);
+            // Event Listeners
+            document.getElementById('registration-form').addEventListener('submit', onFormSubmit);
+            document.getElementById('btn-enable-notification').addEventListener('click', onAllowNotificationClick);
             document.getElementById('btn-skip-notification').addEventListener('click', () => {
                 showToast('নোটিফিকেশন ছাড়া গ্রুপে যোগ দেওয়া যাবে না', 'error');
             });
@@ -723,6 +731,7 @@
                 });
             });
 
+            // Session restore
             const saved = localStorage.getItem('community_user');
             if (saved) {
                 try {
@@ -743,6 +752,7 @@
                         showScreen('screen-register');
                     }
                 } catch (e) {
+                    console.error(e);
                     localStorage.removeItem('community_user');
                     showScreen('screen-register');
                 }
@@ -751,7 +761,7 @@
             }
         });
     </script>
-    
+
     <style>
         * { -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
@@ -763,6 +773,7 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
 
+    <!-- REGISTRATION -->
     <div id="screen-register" class="screen min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md">
             <div class="text-center mb-8">
@@ -794,6 +805,7 @@
         </div>
     </div>
 
+    <!-- BLOCKED -->
     <div id="screen-blocked" class="screen hidden min-h-screen flex items-center justify-center p-4">
         <div class="text-center max-w-md">
             <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -804,6 +816,7 @@
         </div>
     </div>
 
+    <!-- MAIN -->
     <div id="screen-main" class="screen hidden min-h-screen bg-gray-50">
         <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
             <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -826,6 +839,7 @@
         <main class="max-w-2xl mx-auto px-4 py-4"><div id="posts-container"></div></main>
     </div>
 
+    <!-- ADMIN -->
     <div id="screen-admin" class="screen hidden min-h-screen bg-gray-50">
         <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
             <div class="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -897,6 +911,7 @@
         </div>
     </div>
 
+    <!-- ADMIN CHAT -->
     <div id="screen-support-chat" class="screen hidden min-h-screen bg-gray-50 flex flex-col">
         <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
             <div class="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -913,6 +928,7 @@
         </div>
     </div>
 
+    <!-- USER SUPPORT -->
     <div id="screen-user-support" class="screen hidden min-h-screen bg-gray-50 flex flex-col">
         <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
             <div class="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
@@ -929,8 +945,9 @@
         </div>
     </div>
 
+    <!-- NOTIFICATION POPUP -->
     <div id="notification-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-slide-in">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
             <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
             </div>
