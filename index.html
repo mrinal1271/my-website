@@ -22,7 +22,6 @@ OneSignalDeferred.push(async function(OneSignal) {
             serviceWorkerPath: "/my-website/OneSignalSDKWorker.js",
             allowLocalhostAsSecureOrigin: true
         });
-        // নোটিফিকেশন ক্লিক হ্যান্ডলার — অ্যাপ খুলে সরাসরি পোস্টে যাবে
         OneSignal.Notifications.addEventListener('click', (e) => {
             const data = e.notification?.additionalData || {};
             const postId = data.postId;
@@ -30,7 +29,6 @@ OneSignalDeferred.push(async function(OneSignal) {
                 const url = new URL(location.href);
                 url.searchParams.set('post', postId);
                 history.replaceState(null, '', url.toString());
-                // পোস্ট লোড হলে scroll হবে
                 setTimeout(() => {
                     const el = document.getElementById('post-' + postId);
                     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('hl'); }
@@ -59,7 +57,7 @@ if ('serviceWorker' in navigator) {
 <div id="toasts" class="fixed top-3 right-3 z-[100] space-y-2"></div>
 <div id="app" class="max-w-xl mx-auto min-h-screen bg-white relative"><div class="pt-40"><div class="spin"></div></div></div>
 
-<!-- ============== সেফটি নেট (লোডিং আটকে না থাকার জন্য) ============== -->
+<!-- ============== সেফটি নেট ============== -->
 <script>
 (function () {
     var reported = false;
@@ -76,7 +74,6 @@ if ('serviceWorker' in navigator) {
                 '<h2 class="text-lg font-bold mb-2 text-gray-800">লোড হতে সমস্যা হয়েছে</h2>' +
                 '<p class="text-gray-500 text-xs mb-5 break-all px-2">' + safeMsg + '</p>' +
                 '<button onclick="location.reload()" class="px-6 py-2.5 grad text-white rounded-lg font-medium shadow">🔄 আবার চেষ্টা করুন</button>' +
-                '<p class="text-gray-400 text-[11px] mt-4">Firebase Rules / ইন্টারনেট চেক করুন</p>' +
             '</div>';
     }
     window.__showAppError = showAppError;
@@ -88,7 +85,7 @@ if ('serviceWorker' in navigator) {
     setTimeout(function () { showAppError('লোড হতে বেশি সময় লাগছে'); }, 7000);
 })();
 </script>
-<!-- ================================================================== -->
+<!-- ======================================= -->
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -100,9 +97,6 @@ const firebaseConfig = { projectId:"group-app-ab54f", authDomain:"group-app-ab54
 const OS_APP_ID = "6f039946-596a-4750-a70e-3eac2f827f6c";
 const OS_REST_KEY = "os_v2_app_n4bzsrsznjdvbjyoh2wc7at7nqlfqna6t7be3kewtiulwjm6yplndusra3wqdspauw5z2jxf4ogwu5pt7texehzagjmvc5obsgys6gi";
 const SITE = "https://mrinal1271.github.io/my-website/";
-
-// ⚠️ এখানে কোনো এডমিন নম্বর নেই — isAdmin flag Firebase থেকে আসে
-// ======================================================
 
 // ফায়ারবেস ইনিশিয়ালাইজ + Local Caching
 const app = initializeApp(firebaseConfig);
@@ -201,7 +195,7 @@ async function upload(file, folder) {
     }
 }
 
-// ==================== নোটিফিকেশন পুশ (ক্লিকে পোস্টে যাবে) ====================
+// ==================== নোটিফিকেশন পুশ ====================
 async function sendOneSignalPush(title, message, postId) {
     try {
         const postUrl = postId ? `${SITE}?post=${postId}` : SITE;
@@ -222,7 +216,7 @@ async function sendOneSignalPush(title, message, postId) {
     } catch (e) { console.error("Push Error:", e); }
 }
 
-// ==================== ব্যাচ লোড (নিরাপদ) ====================
+// ==================== ব্যাচ লোড ====================
 async function loadBatch() {
     try {
         const r = doc(db, 'settings', 'currentBatch'), s = await getDoc(r);
@@ -237,9 +231,8 @@ async function loadBatch() {
     }
 }
 
-// ==================== বুট (ইনস্ট্যান্ট ক্যাশ + ভেরিফাই) ====================
+// ==================== বুট (FIXED — isAdmin পরিবর্তনে shell রি-রেন্ডার) ====================
 async function boot() {
-    // ১) ক্যাশ থেকে সাথে সাথে UI দেখাও
     const cachedMe = cache.load('cp_me');
     if (cachedMe && cachedMe.id) {
         try {
@@ -249,26 +242,32 @@ async function boot() {
             const cg = cache.load('cp_group'); if (cg) group = cg;
             const cp = cache.load('cp_posts'); if (cp) posts = cp;
             renderShell();
-            // ব্যাকগ্রাউন্ডে সার্ভার থেকে ভেরিফাই
             (async () => {
                 try {
                     const s = await getDoc(doc(db, 'users', me.id));
                     if (!s.exists()) { cache.clearAll(); return location.reload(); }
                     const fresh = { id: me.id, ...s.data() };
                     if (fresh.blocked && fresh.isAdmin !== true) return showBlocked();
+                    const wasAdmin = isAdmin;
                     me = fresh;
                     isAdmin = fresh.isAdmin === true;
                     cache.saveMe(fresh);
-                    renderHeader();
-                    if (tab === 'profile') render();
+                    // ⚡ FIX: isAdmin পরিবর্তন হলে পুরো shell আবার রেন্ডার করব
+                    if (wasAdmin !== isAdmin) {
+                        renderShell();
+                        // বর্তমান tab যদি admin হয় কিন্তু isAdmin false হয়ে যায়
+                        if (!isAdmin && tab === 'admin') tab = 'home';
+                        render();
+                    } else {
+                        renderHeader();
+                        if (tab === 'profile') render();
+                    }
                 } catch (e) { console.warn('Verify failed (offline?):', e); }
                 startListeners();
             })();
             return;
         } catch (e) { console.warn('Cache error:', e); }
     }
-
-    // ২) ক্যাশ নেই — নরমাল বুট
     try { await loadBatch(); } catch(e) {}
     try {
         const id = localStorage.getItem('cp_uid');
@@ -395,13 +394,17 @@ function startListeners() {
     onSnapshot(doc(db, 'users', me.id), s => {
         if (s.exists()) {
             const data = s.data();
-            if (data.blocked && data.isAdmin !== true) showBlocked();
-            // নিজের isAdmin পরিবর্তন হলে সাথে সাথে আপডেট
+            if (data.blocked && data.isAdmin !== true) return showBlocked();
             if (data.isAdmin !== me.isAdmin) {
+                const wasAdmin = isAdmin;
                 me = { id: me.id, ...data };
                 isAdmin = data.isAdmin === true;
                 cache.saveMe(me);
-                renderShell();
+                if (wasAdmin !== isAdmin) {
+                    renderShell();
+                    if (!isAdmin && tab === 'admin') tab = 'home';
+                    render();
+                }
             }
         }
     });
@@ -543,7 +546,7 @@ function renderSupport() {
     $('cs').onclick = send; $('ci').onkeydown = e => e.key === 'Enter' && send();
 }
 
-// ==================== প্রোফাইল (নাম পরিবর্তন সহ) ====================
+// ==================== প্রোফাইল ====================
 function renderProfile() {
     const d = me.joinedAt?.toDate ? me.joinedAt.toDate().toLocaleDateString('bn-BD') : 'আজ';
     $('main').innerHTML = `<div class="p-6 text-center">
@@ -646,7 +649,6 @@ async function createPost() {
         if (postType === 'link') { p.linkUrl = $('plink').value.trim(); if (!/^https?:\/\//.test(p.linkUrl)) { btn.disabled = false; btn.innerText = 'পোস্ট পাবলিশ করুন'; return toast('সঠিক লিংক দিন', true); } }
         if (postType === 'poll') { p.options = [...document.querySelectorAll('.po')].map(i => i.value.trim()).filter(Boolean); if (p.options.length < 2 || !text) { btn.disabled = false; btn.innerText = 'পোস্ট পাবলিশ করুন'; return toast('প্রশ্ন ও কমপক্ষে ২টি অপশন দিন', true); } }
         const r = await addDoc(collection(db, 'posts'), p);
-        // নোটিফিকেশন পাঠাও — ক্লিকে সরাসরি পোস্টে যাবে
         sendOneSignalPush(group.name, text || (postType === 'image' ? '📸 নতুন ছবি পোস্ট হয়েছে' : '📢 নতুন পোস্ট এসেছে'), r.id);
         toast('পোস্ট হয়েছে ✅');
         pollOpts = 2; postType = 'text'; tab = 'home'; render();
