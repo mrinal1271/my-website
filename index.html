@@ -3,45 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Community Platform</title>
-    <!-- Tailwind CSS via CDN -->
+    <title>কমিউনিটি প্ল্যাটফর্ম</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase v10 Modular SDK -->
+    
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+                appId: "6f039946-596a-4750-a70e-3eac2f827f6c",
+                serviceWorkerParam: { scope: "/my-website/" },
+                serviceWorkerPath: "my-website/OneSignalSDKWorker.js",
+                allowLocalhostAsSecureOrigin: true
+            });
+        });
+    </script>
+    
     <script type="module">
-        // ============================================================
-        // FIREBASE SDK IMPORTS (v10 Modular, tree-shakeable)
-        // ============================================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
         import {
-            getFirestore,
-            collection,
-            doc,
-            addDoc,
-            setDoc,
-            getDoc,
-            getDocs,
-            updateDoc,
-            deleteDoc,
-            query,
-            where,
-            orderBy,
-            onSnapshot,
-            serverTimestamp,
-            increment,
-            arrayUnion,
-            arrayRemove,
-            runTransaction
+            getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
+            updateDoc, deleteDoc, query, where, orderBy, onSnapshot,
+            serverTimestamp, increment, arrayUnion, arrayRemove, runTransaction
         } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
         import {
-            getStorage,
-            ref,
-            uploadBytes,
-            getDownloadURL
+            getStorage, ref, uploadBytes, getDownloadURL
         } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
-        // ============================================================
-        // FIREBASE CONFIGURATION
-        // ============================================================
+        // ============ FIREBASE CONFIG ============
         const firebaseConfig = {
             projectId: "group-app-ab54f",
             authDomain: "group-app-ab54f.firebaseapp.com",
@@ -50,36 +41,55 @@
             appId: "1:1014775593877:web:f88fa6cd7b812a7ab3549c",
             measurementId: "G-WNE7ZNZK46"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // ============================================================
-        // GLOBAL STATE
-        // ============================================================
-        const ADMIN_PHONE = "01866989184";
-        const NOTIFICATION_SOUND_URL = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT"";
+        // ============ ONESIGNAL CONFIG ============
+        const ONESIGNAL_APP_ID = "6f039946-596a-4750-a70e-3eac2f827f6c";
+        const ONESIGNAL_REST_API_KEY = "os_v2_app_n4bzsrsznjdvbjyoh2wc7at7nqlfqna6t7be3kewtiulwjm6yplndusra3wqdspauw5z2jxf4ogwu5pt7texehzagjmvc5obsgys6gi";
+        const SITE_URL = "https://mrinal1271.github.io/my-website/";
 
-        // Current user session
+        // ============ GLOBAL STATE ============
+        const ADMIN_PHONE = "01866989184";
         let currentUser = null;
         let isAdmin = false;
-        let currentBatchId = null;
+        let pendingRegistration = null;
         let unsubscribers = [];
-        let notificationSound = null;
+        let isFirstPostLoad = true;
+        let lastPostTime = 0;
 
-        // ============================================================
-        // UTILITY FUNCTIONS
-        // ============================================================
+        // ============ NOTIFICATION SOUND (Web Audio API) ============
+        function playNotificationSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.5);
+                setTimeout(() => {
+                    try { ctx.close(); } catch(e) {}
+                }, 1000);
+            } catch (e) {
+                console.log('Sound error:', e);
+            }
+        }
+
+        // ============ UTILITIES ============
         function getInitials(name) {
-            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            return (name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         }
 
         function formatTime(timestamp) {
             if (!timestamp) return '';
             const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            const now = new Date();
-            const diff = Math.floor((now - date) / 1000);
+            const diff = Math.floor((new Date() - date) / 1000);
             if (diff < 60) return 'এইমাত্র';
             if (diff < 3600) return `${Math.floor(diff / 60)} মিনিট আগে`;
             if (diff < 86400) return `${Math.floor(diff / 3600)} ঘন্টা আগে`;
@@ -87,15 +97,19 @@
             return date.toLocaleDateString('bn-BD');
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
         function showToast(message, type = 'info') {
             const colors = {
-                info: 'bg-blue-500',
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                warning: 'bg-yellow-500'
+                info: 'bg-blue-500', success: 'bg-green-500',
+                error: 'bg-red-500', warning: 'bg-yellow-500'
             };
             const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-[9999] animate-slide-in text-sm font-medium`;
+            toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-[9999] text-sm font-medium`;
             toast.textContent = message;
             document.body.appendChild(toast);
             setTimeout(() => {
@@ -105,720 +119,517 @@
             }, 3000);
         }
 
-        function playNotificationSound() {
-            if (notificationSound) {
-                notificationSound.currentTime = 0;
-                notificationSound.play().catch(() => {});
-            }
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
         }
 
-        function sendBrowserNotification(title, body, icon = '') {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                const notification = new Notification(title, {
-                    body: body,
-                    icon: icon || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%236366f1"/></svg>',
-                    badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="%236366f1"/></svg>',
-                    vibrate: [200, 100, 200],
-                    tag: 'community-post',
-                    renotify: true
-                });
-                notification.onclick = () => {
-                    window.focus();
-                    notification.close();
-                };
-                setTimeout(() => notification.close(), 8000);
-            }
-        }
-
-        // ============================================================
-        // NOTIFICATION PERMISSION (MANDATORY)
-        // ============================================================
+        // ============ NOTIFICATION PERMISSION ============
         async function requestNotificationPermission() {
             if (!('Notification' in window)) {
-                showToast('আপনার ব্রাউজার নোটিফিকেশন সাপোর্ট করে না', 'error');
+                showToast('ব্রাউজার নোটিফিকেশন সাপোর্ট করে না', 'error');
                 return false;
             }
-
-            if (Notification.permission === 'granted') {
-                return true;
-            }
-
+            if (Notification.permission === 'granted') return true;
             if (Notification.permission === 'denied') {
-                showToast('নোটিফিকেশন ব্লক করা হয়েছে। ব্রাউজার সেটিংস থেকে অনুমতি দিন।', 'error');
+                showToast('নোটিফিকেশন ব্লক করা আছে। ব্রাউজার সেটিংস থেকে অনুমতি দিন।', 'error');
                 return false;
             }
-
             const permission = await Notification.requestPermission();
             return permission === 'granted';
         }
 
-        // ============================================================
-        // UI NAVIGATION
-        // ============================================================
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-            document.getElementById(screenId)?.classList.remove('hidden');
+        // ============ REGISTRATION ============
+        async function handleRegistrationFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const gmail = document.getElementById('reg-gmail').value.trim();
+
+            if (!name || !phone) {
+                showToast('নাম এবং ফোন নম্বর দিন', 'warning');
+                return;
+            }
+
+            pendingRegistration = { name, phone, gmail };
+
+            const popup = document.getElementById('notification-popup');
+            popup.classList.remove('hidden');
+            popup.classList.add('flex');
         }
 
-        // ============================================================
-        // REGISTRATION / LOGIN FLOW
-        // ============================================================
-        async function handleRegistration(name, phone, gmail) {
-            // Check if notification permission is granted (mandatory)
-            const hasPermission = await requestNotificationPermission();
-            if (!hasPermission) {
+        async function onNotificationAllow() {
+            const granted = await requestNotificationPermission();
+            if (!granted) {
                 showToast('গ্রুপে যোগ দিতে নোটিফিকেশন অনুমতি আবশ্যক', 'error');
                 return;
             }
 
-            // Check new batch: block old users
-            const batchDoc = await getDoc(doc(db, 'settings', 'currentBatch'));
-            const batchId = batchDoc.exists() ? batchDoc.data().batchId : 'batch_1';
+            const popup = document.getElementById('notification-popup');
+            popup.classList.add('hidden');
+            popup.classList.remove('flex');
 
-            // Check if phone is already registered in ANY batch
-            const usersQuery = query(collection(db, 'users'), where('phone', '==', phone));
-            const usersSnapshot = await getDocs(usersQuery);
-
-            if (!usersSnapshot.empty) {
-                const existingUser = usersSnapshot.docs[0].data();
-                // If old batch user tries to join new batch, block
-                if (existingUser.batchId !== batchId) {
-                    showToast('আপনি ইতিমধ্যে একটি পুরানো ব্যাচে নিবন্ধিত। নতুন ব্যাচে যোগ দিতে পারবেন না।', 'error');
-                    showScreen('screen-blocked');
-                    return;
-                }
-                // If same batch, allow re-login
-                currentUser = { id: usersSnapshot.docs[0].id, ...existingUser };
-            } else {
-                // New user registration
-                const userData = {
-                    name,
-                    phone,
-                    gmail: gmail || '',
-                    batchId,
-                    joinedAt: serverTimestamp(),
-                    lastSeen: serverTimestamp(),
-                    notificationEnabled: true,
-                    viewedPosts: []
-                };
-                const docRef = await addDoc(collection(db, 'users'), userData);
-                currentUser = { id: docRef.id, ...userData };
-            }
-
-            // Store session
-            localStorage.setItem('community_user', JSON.stringify({
-                id: currentUser.id,
-                name: currentUser.name,
-                phone: currentUser.phone,
-                batchId: currentUser.batchId
-            }));
-
-            // Initialize app
-            initializeAppUI();
+            await completeRegistration();
         }
 
-        // ============================================================
-        // INITIALIZE APP UI AFTER LOGIN
-        // ============================================================
+        async function completeRegistration() {
+            if (!pendingRegistration) return;
+            const { name, phone, gmail } = pendingRegistration;
+
+            try {
+                const batchDoc = await getDoc(doc(db, 'settings', 'currentBatch'));
+                const batchId = batchDoc.exists() ? batchDoc.data().batchId : 'batch_1';
+
+                const usersSnap = await getDocs(query(collection(db, 'users'), where('phone', '==', phone)));
+
+                if (!usersSnap.empty) {
+                    const existing = usersSnap.docs[0].data();
+                    if (existing.batchId !== batchId && phone !== ADMIN_PHONE) {
+                        showScreen('screen-blocked');
+                        return;
+                    }
+                    currentUser = { id: usersSnap.docs[0].id, ...existing };
+                } else {
+                    const userData = {
+                        name, phone,
+                        gmail: gmail || '',
+                        batchId,
+                        joinedAt: serverTimestamp(),
+                        viewedPosts: []
+                    };
+                    const docRef = await addDoc(collection(db, 'users'), userData);
+                    currentUser = { id: docRef.id, ...userData };
+                }
+
+                localStorage.setItem('community_user', JSON.stringify({
+                    id: currentUser.id,
+                    name: currentUser.name,
+                    phone: currentUser.phone,
+                    batchId: currentUser.batchId
+                }));
+
+                connectOneSignal(currentUser.id);
+                initializeAppUI();
+            } catch (err) {
+                console.error('Registration error:', err);
+                showToast('নিবন্ধনে সমস্যা হয়েছে: ' + err.message, 'error');
+            }
+        }
+
+        // ============ ONESIGNAL CONNECTION ============
+        function connectOneSignal(userId) {
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function(OneSignal) {
+                try {
+                    await OneSignal.login(userId);
+                    console.log('OneSignal user connected:', userId);
+                } catch (e) {
+                    console.error('OneSignal login error:', e);
+                }
+            });
+        }
+
+        // ============ ONESIGNAL PUSH SENDER ============
+        async function sendOneSignalPush(title, message, postId) {
+            try {
+                const payload = {
+                    app_id: ONESIGNAL_APP_ID,
+                    included_segments: ["Subscribed Users"],
+                    headings: { en: title, bn: title },
+                    contents: { en: message, bn: message },
+                    url: postId ? `${SITE_URL}?post=${postId}` : SITE_URL,
+                    chrome_web_icon: SITE_URL + "icon.png",
+                    chrome_web_badge: SITE_URL + "icon.png"
+                };
+                console.log('Sending push:', payload);
+                const res = await fetch("https://onesignal.com/api/v1/notifications", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json; charset=utf-8",
+                        "Authorization": "Basic " + ONESIGNAL_REST_API_KEY
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                console.log('OneSignal response:', data);
+                if (data.errors) {
+                    console.error('OneSignal errors:', data.errors);
+                    showToast('পুশ সমস্যা: ' + JSON.stringify(data.errors), 'error');
+                } else {
+                    showToast('পুশ পাঠানো হয়েছে: ' + (data.recipients || 0) + ' জন', 'success');
+                }
+            } catch (e) {
+                console.error('Push error:', e);
+                showToast('পুশ পাঠাতে সমস্যা', 'error');
+            }
+        }
+
+        // ============ INITIALIZE UI ============
         function initializeAppUI() {
             isAdmin = currentUser.phone === ADMIN_PHONE;
+            const nameEl = document.getElementById('user-name');
+            if (nameEl) nameEl.textContent = currentUser.name;
 
-            // Update header
-            document.getElementById('user-name').textContent = currentUser.name;
-            document.getElementById('user-avatar').textContent = getInitials(currentUser.name);
-
-            // Show admin button if admin
             if (isAdmin) {
-                document.getElementById('btn-admin').classList.remove('hidden');
+                document.getElementById('btn-admin')?.classList.remove('hidden');
             }
 
             showScreen('screen-main');
             loadPosts();
             listenForNewPosts();
-            listenForNotifications();
+            handleDeepLink();
+
+            OneSignalDeferred.push(function(OneSignal) {
+                OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+                    playNotificationSound();
+                    showToast('📢 নতুন পোস্ট এসেছে!', 'info');
+                });
+            });
         }
 
-        // ============================================================
-        // LOAD POSTS (Real-time)
-        // ============================================================
+        // ============ DEEP LINK ============
+        function handleDeepLink() {
+            const params = new URLSearchParams(window.location.search);
+            const postId = params.get('post');
+            if (!postId) return;
+
+            setTimeout(() => {
+                const el = document.querySelector(`[data-post-id="${postId}"]`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.style.boxShadow = '0 0 0 3px #6366f1';
+                    setTimeout(() => el.style.boxShadow = '', 3000);
+                }
+            }, 2000);
+        }
+
+        // ============ LOAD POSTS ============
         function loadPosts() {
-            // Unsubscribe from previous listeners
             unsubscribers.forEach(u => u());
             unsubscribers = [];
 
-            const postsContainer = document.getElementById('posts-container');
-            postsContainer.innerHTML = '<div class="flex justify-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>';
+            const container = document.getElementById('posts-container');
+            if (!container) return;
+            container.innerHTML = '<div class="flex justify-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>';
 
-            const q = query(
-                collection(db, 'posts'),
-                orderBy('createdAt', 'desc')
-            );
-
+            const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
             const unsub = onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) {
-                    postsContainer.innerHTML = `
-                        <div class="text-center py-16 text-gray-400">
-                            <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
-                            </svg>
-                            <p class="text-lg font-medium">এখনো কোনো পোস্ট নেই</p>
-                            <p class="text-sm mt-1">অ্যাডমিন পোস্ট করলে এখানে দেখা যাবে</p>
-                        </div>`;
+                    container.innerHTML = `<div class="text-center py-16 text-gray-400"><p class="text-lg font-medium">এখনো কোনো পোস্ট নেই</p></div>`;
                     return;
                 }
-
-                postsContainer.innerHTML = '';
+                container.innerHTML = '';
                 snapshot.forEach(docSnap => {
                     const post = { id: docSnap.id, ...docSnap.data() };
-                    const postEl = createPostElement(post);
-                    postsContainer.appendChild(postEl);
+                    container.appendChild(createPostElement(post));
+                    trackPostView(post.id);
                 });
-
-                // Track view for each post
-                snapshot.forEach(docSnap => {
-                    trackPostView(docSnap.id);
-                });
-            }, (error) => {
-                console.error('Posts listener error:', error);
-                postsContainer.innerHTML = '<p class="text-center text-red-500 py-8">পোস্ট লোড করতে সমস্যা হয়েছে</p>';
+            }, (err) => {
+                console.error('Post load error:', err);
+                container.innerHTML = '<p class="text-center text-red-500 py-8">পোস্ট লোড করতে সমস্যা। Firestore Rules চেক করুন।</p>';
             });
-
             unsubscribers.push(unsub);
         }
 
-        // ============================================================
-        // CREATE POST ELEMENT
-        // ============================================================
+        // ============ POST ELEMENT ============
         function createPostElement(post) {
             const div = document.createElement('div');
-            div.className = 'bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4 animate-fade-in';
+            div.className = 'bg-white rounded-2xl shadow-sm border border-gray-100 mb-4';
             div.dataset.postId = post.id;
 
             const isLiked = post.likes && post.likes.includes(currentUser.id);
             const likeCount = post.likes ? post.likes.length : 0;
             const viewCount = post.views || 0;
 
-            // Determine post type content
             let contentHTML = '';
-
             if (post.type === 'text') {
-                contentHTML = `<p class="text-gray-800 leading-relaxed whitespace-pre-wrap">${escapeHtml(post.text || '')}</p>`;
+                contentHTML = `<p class="text-gray-800 whitespace-pre-wrap">${escapeHtml(post.text)}</p>`;
             } else if (post.type === 'image') {
-                contentHTML = `
-                    <p class="text-gray-800 mb-3 whitespace-pre-wrap">${escapeHtml(post.text || '')}</p>
-                    <img src="${post.imageUrl}" alt="Post image" class="rounded-xl w-full object-cover max-h-96 cursor-pointer" onclick="window.open('${post.imageUrl}', '_blank')">
-                `;
+                contentHTML = `<p class="text-gray-800 mb-3 whitespace-pre-wrap">${escapeHtml(post.text)}</p><img src="${post.imageUrl}" class="rounded-xl w-full max-h-96 object-cover cursor-pointer" onclick="window.open('${post.imageUrl}','_blank')">`;
             } else if (post.type === 'video') {
-                contentHTML = `
-                    <p class="text-gray-800 mb-3 whitespace-pre-wrap">${escapeHtml(post.text || '')}</p>
-                    <video controls class="rounded-xl w-full max-h-96">
-                        <source src="${post.videoUrl}" type="video/mp4">
-                    </video>
-                `;
+                contentHTML = `<p class="text-gray-800 mb-3 whitespace-pre-wrap">${escapeHtml(post.text)}</p><video controls class="rounded-xl w-full max-h-96"><source src="${post.videoUrl}" type="video/mp4"></video>`;
             } else if (post.type === 'link') {
-                const url = post.linkUrl || '';
-                contentHTML = `
-                    <p class="text-gray-800 mb-3 whitespace-pre-wrap">${escapeHtml(post.text || '')}</p>
-                    <a href="${url}" target="_blank" class="block bg-indigo-50 border border-indigo-100 rounded-xl p-4 hover:bg-indigo-100 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                                </svg>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-sm font-medium text-indigo-700 truncate">${escapeHtml(url)}</p>
-                                <p class="text-xs text-indigo-400">লিংক খুলতে ক্লিক করুন</p>
-                            </div>
-                        </div>
-                    </a>
-                `;
+                contentHTML = `<p class="text-gray-800 mb-3 whitespace-pre-wrap">${escapeHtml(post.text)}</p><a href="${post.linkUrl}" target="_blank" class="block bg-indigo-50 border border-indigo-100 rounded-xl p-4 hover:bg-indigo-100"><p class="text-sm text-indigo-700 truncate">${escapeHtml(post.linkUrl)}</p></a>`;
             } else if (post.type === 'poll') {
                 const options = post.options || [];
                 const votes = post.votes || {};
-                const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
+                const total = Object.values(votes).reduce((a,b)=>a+b,0);
                 const userVote = votes[currentUser.id];
-
-                let optionsHTML = '';
+                let optHTML = '';
                 options.forEach((opt, idx) => {
-                    const optVotes = opt.votes || 0;
-                    const percentage = totalVotes > 0 ? Math.round((optVotes / totalVotes) * 100) : 0;
-                    const isSelected = userVote === idx;
-
-                    optionsHTML += `
-                        <button onclick="votePoll('${post.id}', ${idx})" ${userVote !== undefined ? 'disabled' : ''} class="w-full text-left p-3 rounded-xl border-2 transition-all ${isSelected ? 'border-indigo-500 bg-indigo-50' : userVote !== undefined ? 'border-gray-200 bg-gray-50' : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'} relative overflow-hidden">
-                            <div class="absolute inset-0 bg-indigo-100 transition-all" style="width: ${percentage}%"></div>
-                            <div class="relative flex items-center justify-between">
-                                <span class="font-medium text-sm ${isSelected ? 'text-indigo-700' : 'text-gray-700'}">${escapeHtml(opt.text)}</span>
-                                <span class="text-xs font-semibold ${isSelected ? 'text-indigo-600' : 'text-gray-500'}">${percentage}% (${optVotes})</span>
-                            </div>
-                        </button>
-                    `;
+                    const v = opt.votes || 0;
+                    const pct = total > 0 ? Math.round((v/total)*100) : 0;
+                    const sel = userVote === idx;
+                    optHTML += `<button onclick="votePoll('${post.id}',${idx})" ${userVote!==undefined?'disabled':''} class="w-full text-left p-3 rounded-xl border-2 mb-2 ${sel?'border-indigo-500 bg-indigo-50':'border-gray-200'} relative overflow-hidden"><div class="absolute inset-0 bg-indigo-100" style="width:${pct}%"></div><div class="relative flex justify-between"><span class="text-sm font-medium">${escapeHtml(opt.text)}</span><span class="text-xs font-semibold">${pct}%</span></div></button>`;
                 });
-
-                contentHTML = `
-                    <p class="text-gray-800 mb-3 font-medium whitespace-pre-wrap">${escapeHtml(post.text || '')}</p>
-                    <div class="space-y-2">${optionsHTML}</div>
-                    <p class="text-xs text-gray-400 mt-3 text-center">${totalVotes} ভোট পড়েছে</p>
-                `;
+                contentHTML = `<p class="text-gray-800 mb-3 font-medium whitespace-pre-wrap">${escapeHtml(post.text)}</p>${optHTML}<p class="text-xs text-gray-400 mt-2 text-center">${total} ভোট</p>`;
             }
 
             div.innerHTML = `
                 <div class="p-4">
-                    <!-- Post Header -->
                     <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                            A
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-gray-900 text-sm">Admin</p>
-                            <p class="text-xs text-gray-400">${formatTime(post.createdAt)}</p>
-                        </div>
-                        ${isAdmin ? `
-                            <div class="flex gap-1">
-                                <button onclick="editPost('${post.id}')" class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                </button>
-                                <button onclick="deletePost('${post.id}')" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </div>
-                        ` : ''}
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">A</div>
+                        <div class="flex-1"><p class="font-semibold text-gray-900 text-sm">Admin</p><p class="text-xs text-gray-400">${formatTime(post.createdAt)}</p></div>
+                        ${isAdmin ? `<button onclick="deletePost('${post.id}')" class="p-2 text-gray-400 hover:text-red-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>` : ''}
                     </div>
-
-                    <!-- Post Content -->
                     <div class="mb-3">${contentHTML}</div>
-
-                    <!-- Post Footer / Actions -->
                     <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <div class="flex items-center gap-1">
-                            <button onclick="toggleLike('${post.id}')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${isLiked ? 'text-red-500 bg-red-50' : 'text-gray-500 hover:text-red-500 hover:bg-red-50'}">
-                                <svg class="w-5 h-5" fill="${isLiked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                </svg>
-                                <span class="text-xs font-medium">${likeCount}</span>
-                            </button>
-                        </div>
+                        <button onclick="toggleLike('${post.id}')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full ${isLiked?'text-red-500 bg-red-50':'text-gray-500'}">
+                            <svg class="w-5 h-5" fill="${isLiked?'currentColor':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                            <span class="text-xs font-medium">${likeCount}</span>
+                        </button>
                         <div class="flex items-center gap-1 text-gray-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             <span class="text-xs">${viewCount} জন দেখেছেন</span>
                         </div>
                     </div>
-                </div>
-            `;
-
+                </div>`;
             return div;
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // ============================================================
-        // POST INTERACTIONS
-        // ============================================================
+        // ============ INTERACTIONS ============
         async function toggleLike(postId) {
-            const postRef = doc(db, 'posts', postId);
-            const postSnap = await getDoc(postRef);
-            if (!postSnap.exists()) return;
-
-            const post = postSnap.data();
-            const likes = post.likes || [];
-            const isLiked = likes.includes(currentUser.id);
-
-            if (isLiked) {
-                await updateDoc(postRef, { likes: arrayRemove(currentUser.id) });
+            const ref = doc(db, 'posts', postId);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) return;
+            const likes = snap.data().likes || [];
+            if (likes.includes(currentUser.id)) {
+                await updateDoc(ref, { likes: arrayRemove(currentUser.id) });
             } else {
-                await updateDoc(postRef, { likes: arrayUnion(currentUser.id) });
+                await updateDoc(ref, { likes: arrayUnion(currentUser.id) });
             }
         }
 
-        async function votePoll(postId, optionIndex) {
-            const postRef = doc(db, 'posts', postId);
-
-            await runTransaction(db, async (transaction) => {
-                const postDoc = await transaction.get(postRef);
-                if (!postDoc.exists()) throw 'Post does not exist!';
-
-                const post = postDoc.data();
+        async function votePoll(postId, idx) {
+            const ref = doc(db, 'posts', postId);
+            await runTransaction(db, async (t) => {
+                const snap = await t.get(ref);
+                if (!snap.exists()) throw 'no post';
+                const post = snap.data();
                 const votes = post.votes || {};
-
-                // Check if user already voted
-                if (votes[currentUser.id] !== undefined) {
-                    throw 'Already voted!';
-                }
-
-                // Update votes map
-                votes[currentUser.id] = optionIndex;
-
-                // Update options with vote counts
-                const options = post.options.map((opt, idx) => ({
-                    ...opt,
-                    votes: idx === optionIndex ? (opt.votes || 0) + 1 : (opt.votes || 0)
-                }));
-
-                transaction.update(postRef, { votes, options });
-            });
+                if (votes[currentUser.id] !== undefined) throw 'already voted';
+                votes[currentUser.id] = idx;
+                const options = post.options.map((o, i) => ({...o, votes: i === idx ? (o.votes||0)+1 : (o.votes||0)}));
+                t.update(ref, { votes, options });
+            }).catch(e => { if (e !== 'already voted') console.error(e); });
         }
 
         async function trackPostView(postId) {
-            const postRef = doc(db, 'posts', postId);
-            const postSnap = await getDoc(postRef);
-            if (!postSnap.exists()) return;
-
-            const post = postSnap.data();
-            const viewedBy = post.viewedBy || [];
-
-            if (!viewedBy.includes(currentUser.id)) {
-                await updateDoc(postRef, {
-                    views: increment(1),
-                    viewedBy: arrayUnion(currentUser.id)
-                });
-            }
+            try {
+                const ref = doc(db, 'posts', postId);
+                const snap = await getDoc(ref);
+                if (!snap.exists()) return;
+                const viewedBy = snap.data().viewedBy || [];
+                if (!viewedBy.includes(currentUser.id)) {
+                    await updateDoc(ref, { views: increment(1), viewedBy: arrayUnion(currentUser.id) });
+                }
+            } catch (e) {}
         }
 
-        // ============================================================
-        // REAL-TIME NOTIFICATIONS (Firestore listener for new posts)
-        // ============================================================
-        let lastPostTimestamp = null;
-        let isFirstLoad = true;
+        async function deletePost(postId) {
+            if (!confirm('পোস্টটি ডিলিট করবেন?')) return;
+            await deleteDoc(doc(db, 'posts', postId));
+            showToast('ডিলিট হয়েছে', 'success');
+        }
 
+        // ============ NEW POST LISTENER ============
         function listenForNewPosts() {
-            const q = query(
-                collection(db, 'posts'),
-                orderBy('createdAt', 'desc')
-            );
-
-            const unsub = onSnapshot(q, (snapshot) => {
-                if (isFirstLoad) {
-                    isFirstLoad = false;
-                    // Set the latest timestamp on first load
-                    if (!snapshot.empty) {
-                        lastPostTimestamp = snapshot.docs[0].data().createdAt;
+            isFirstPostLoad = true;
+            lastPostTime = 0;
+            const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+            const unsub = onSnapshot(q, (snap) => {
+                if (isFirstPostLoad) {
+                    isFirstPostLoad = false;
+                    if (!snap.empty) {
+                        const t = snap.docs[0].data().createdAt;
+                        lastPostTime = t?.seconds || 0;
                     }
                     return;
                 }
-
-                snapshot.docChanges().forEach((change) => {
+                snap.docChanges().forEach(change => {
                     if (change.type === 'added') {
-                        const post = { id: change.doc.id, ...change.doc.data() };
-                        // Only notify if post is newer than last seen
-                        if (lastPostTimestamp && post.createdAt &&
-                            post.createdAt.seconds > lastPostTimestamp.seconds) {
-                            lastPostTimestamp = post.createdAt;
-
-                            // Play sound
+                        const post = change.doc.data();
+                        const t = post.createdAt?.seconds || 0;
+                        if (t > lastPostTime) {
+                            lastPostTime = t;
                             playNotificationSound();
-
-                            // Browser notification
-                            const bodyText = post.text || (post.type === 'poll' ? 'নতুন ভোট!' : 'নতুন পোস্ট!');
-                            sendBrowserNotification('নতুন পোস্ট 📢', bodyText.slice(0, 100));
-
-                            // In-app toast
                             showToast('📢 নতুন পোস্ট এসেছে!', 'info');
-                        } else if (!lastPostTimestamp && post.createdAt) {
-                            lastPostTimestamp = post.createdAt;
                         }
                     }
                 });
             });
-
             unsubscribers.push(unsub);
         }
 
-        // ============================================================
-        // LISTEN FOR ADMIN NOTIFICATIONS (via Firestore)
-        // ============================================================
-        function listenForNotifications() {
-            const q = query(
-                collection(db, 'notifications'),
-                where('targetBatch', '==', currentUser.batchId),
-                orderBy('createdAt', 'desc')
-            );
-
-            const unsub = onSnapshot(q, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === 'added') {
-                        const notif = change.doc.data();
-                        // Check if this notification is for this user
-                        if (notif.targetUser === 'all' || notif.targetUser === currentUser.id) {
-                            playNotificationSound();
-                            sendBrowserNotification(notif.title || 'নোটিফিকেশন', notif.body || '');
-                            showToast(notif.body || 'নতুন নোটিফিকেশন', 'info');
-                        }
-                    }
-                });
-            });
-
-            unsubscribers.push(unsub);
-        }
-
-        // ============================================================
-        // ADMIN FUNCTIONS
-        // ============================================================
-        async function startNewBatch() {
-            if (!isAdmin) return;
-
-            const newBatchId = 'batch_' + Date.now();
-            await setDoc(doc(db, 'settings', 'currentBatch'), {
-                batchId: newBatchId,
-                startedAt: serverTimestamp()
-            });
-
-            // Update current user's batch
-            currentUser.batchId = newBatchId;
-
-            showToast('নতুন ব্যাচ শুরু হয়েছে! পুরানো সদস্যরা ব্লক হবে।', 'success');
-            loadAdminData();
-        }
-
+        // ============ ADMIN: CREATE POST ============
         async function createPost() {
             if (!isAdmin) return;
-
             const text = document.getElementById('post-text').value.trim();
             const type = document.getElementById('post-type').value;
             const linkUrl = document.getElementById('post-link').value.trim();
             const imageFile = document.getElementById('post-image').files[0];
             const videoFile = document.getElementById('post-video').files[0];
-            const pollOptions = [];
-
+            const pollOpts = [];
             if (type === 'poll') {
-                const optInputs = document.querySelectorAll('.poll-option-input');
-                optInputs.forEach(input => {
-                    if (input.value.trim()) {
-                        pollOptions.push({ text: input.value.trim(), votes: 0 });
-                    }
+                document.querySelectorAll('.poll-option-input').forEach(i => {
+                    if (i.value.trim()) pollOpts.push({ text: i.value.trim(), votes: 0 });
                 });
             }
 
-            if (!text && !imageFile && !videoFile && pollOptions.length < 2 && !linkUrl) {
-                showToast('অন্তত কিছু কন্টেন্ট দিন', 'warning');
+            if (!text && !imageFile && !videoFile && !linkUrl && pollOpts.length < 2) {
+                showToast('কিছু কন্টেন্ট দিন', 'warning');
                 return;
             }
 
+            showToast('পোস্ট করা হচ্ছে...', 'info');
+
             try {
-                let imageUrl = '';
-                let videoUrl = '';
-
-                // Upload image if present
+                let imageUrl = '', videoUrl = '';
                 if (imageFile) {
-                    const storageRef = ref(storage, `posts/images/${Date.now()}_${imageFile.name}`);
-                    const snapshot = await uploadBytes(storageRef, imageFile);
-                    imageUrl = await getDownloadURL(snapshot.ref);
+                    const r = ref(storage, `posts/images/${Date.now()}_${imageFile.name}`);
+                    const s = await uploadBytes(r, imageFile);
+                    imageUrl = await getDownloadURL(s.ref);
                 }
-
-                // Upload video if present
                 if (videoFile) {
-                    const storageRef = ref(storage, `posts/videos/${Date.now()}_${videoFile.name}`);
-                    const snapshot = await uploadBytes(storageRef, videoFile);
-                    videoUrl = await getDownloadURL(snapshot.ref);
+                    const r = ref(storage, `posts/videos/${Date.now()}_${videoFile.name}`);
+                    const s = await uploadBytes(r, videoFile);
+                    videoUrl = await getDownloadURL(s.ref);
                 }
 
                 let postType = 'text';
                 if (imageFile) postType = 'image';
                 else if (videoFile) postType = 'video';
                 else if (linkUrl) postType = 'link';
-                else if (pollOptions.length >= 2) postType = 'poll';
+                else if (pollOpts.length >= 2) postType = 'poll';
 
-                await addDoc(collection(db, 'posts'), {
-                    type: postType,
-                    text,
-                    imageUrl,
-                    videoUrl,
-                    linkUrl,
-                    options: pollOptions,
-                    votes: {},
-                    likes: [],
-                    views: 0,
-                    viewedBy: [],
-                    createdAt: serverTimestamp(),
-                    batchId: currentUser.batchId
-                });
+                const postData = {
+                    type: postType, text, imageUrl, videoUrl, linkUrl,
+                    options: pollOpts, votes: {}, likes: [], views: 0, viewedBy: [],
+                    createdAt: serverTimestamp(), batchId: currentUser.batchId
+                };
+                const newDoc = await addDoc(collection(db, 'posts'), postData);
 
-                // Clear form
+                const pushTitle = 'নতুন পোস্ট 📢';
+                const pushBody = text ? text.substring(0, 100) : (postType === 'poll' ? 'নতুন ভোট এসেছে!' : 'নতুন পোস্ট এসেছে!');
+                await sendOneSignalPush(pushTitle, pushBody, newDoc.id);
+
                 document.getElementById('post-text').value = '';
                 document.getElementById('post-link').value = '';
                 document.getElementById('post-image').value = '';
                 document.getElementById('post-video').value = '';
                 document.querySelectorAll('.poll-option-input').forEach(i => i.value = '');
 
-                showToast('পোস্ট সফলভাবে তৈরি হয়েছে!', 'success');
-            } catch (error) {
-                console.error('Post creation error:', error);
-                showToast('পোস্ট তৈরি করতে সমস্যা হয়েছে', 'error');
+                showToast('পোস্ট তৈরি হয়েছে!', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('পোস্ট করতে সমস্যা: ' + e.message, 'error');
             }
         }
 
-        async function editPost(postId) {
-            const postSnap = await getDoc(doc(db, 'posts', postId));
-            if (!postSnap.exists()) return;
-
-            const post = postSnap.data();
-            const newText = prompt('পোস্ট এডিট করুন:', post.text || '');
-            if (newText !== null) {
-                await updateDoc(doc(db, 'posts', postId), { text: newText });
-                showToast('পোস্ট আপডেট হয়েছে', 'success');
-            }
+        // ============ ADMIN: NEW BATCH ============
+        async function startNewBatch() {
+            if (!isAdmin) return;
+            if (!confirm('নতুন ব্যাচ শুরু করলে পুরানো সদস্যরা ব্লক হবে। নিশ্চিত?')) return;
+            const newBatchId = 'batch_' + Date.now();
+            await setDoc(doc(db, 'settings', 'currentBatch'), { batchId: newBatchId, startedAt: serverTimestamp() });
+            currentUser.batchId = newBatchId;
+            showToast('নতুন ব্যাচ শুরু হয়েছে!', 'success');
         }
 
-        async function deletePost(postId) {
-            if (!confirm('আপনি কি এই পোস্টটি ডিলিট করতে চান?')) return;
-            await deleteDoc(doc(db, 'posts', postId));
-            showToast('পোস্ট ডিলিট হয়েছে', 'success');
-        }
-
+        // ============ ADMIN: LOAD DATA ============
         async function loadAdminData() {
             if (!isAdmin) return;
-
-            // Load member count
-            const usersSnapshot = await getDocs(collection(db, 'users'));
-            document.getElementById('admin-member-count').textContent = usersSnapshot.size;
-
-            // Load support inbox
-            loadSupportInbox();
+            try {
+                const users = await getDocs(collection(db, 'users'));
+                document.getElementById('admin-member-count').textContent = users.size;
+                loadSupportInbox();
+            } catch (e) {
+                console.error(e);
+            }
         }
 
-        // ============================================================
-        // SUPPORT INBOX
-        // ============================================================
+        // ============ SUPPORT INBOX ============
         async function loadSupportInbox() {
             if (!isAdmin) return;
-
-            const inboxContainer = document.getElementById('admin-inbox-list');
-            inboxContainer.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">লোড হচ্ছে...</p>';
-
-            // Get all support messages grouped by user
-            const q = query(collection(db, 'supportMessages'), orderBy('createdAt', 'desc'));
-            const snapshot = await getDocs(q);
-
-            if (snapshot.empty) {
-                inboxContainer.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">কোনো মেসেজ নেই</p>';
-                return;
-            }
-
-            // Group by user
-            const userMessages = {};
-            snapshot.forEach(doc => {
-                const msg = { id: doc.id, ...doc.data() };
-                if (!userMessages[msg.userId]) {
-                    userMessages[msg.userId] = [];
+            const container = document.getElementById('admin-inbox-list');
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">লোড হচ্ছে...</p>';
+            try {
+                const snap = await getDocs(query(collection(db, 'supportMessages'), orderBy('createdAt', 'desc')));
+                if (snap.empty) {
+                    container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">কোনো মেসেজ নেই</p>';
+                    return;
                 }
-                userMessages[msg.userId].push(msg);
-            });
-
-            inboxContainer.innerHTML = '';
-            Object.entries(userMessages).forEach(([userId, messages]) => {
-                const lastMsg = messages[0];
-                const unreadCount = messages.filter(m => !m.seen).length;
-
-                const div = document.createElement('div');
-                div.className = 'flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors';
-                div.onclick = () => openSupportChat(userId, lastMsg.userName);
-                div.innerHTML = `
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        ${getInitials(lastMsg.userName || 'User')}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-medium text-sm text-gray-900 truncate">${escapeHtml(lastMsg.userName || 'User')}</p>
-                        <p class="text-xs text-gray-500 truncate">${escapeHtml(lastMsg.text || '')}</p>
-                    </div>
-                    ${unreadCount > 0 ? `
-                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">${unreadCount}</span>
-                    ` : ''}
-                `;
-                inboxContainer.appendChild(div);
-            });
+                const grouped = {};
+                snap.forEach(d => {
+                    const m = { id: d.id, ...d.data() };
+                    if (!grouped[m.userId]) grouped[m.userId] = [];
+                    grouped[m.userId].push(m);
+                });
+                container.innerHTML = '';
+                Object.entries(grouped).forEach(([uid, msgs]) => {
+                    const last = msgs[0];
+                    const unread = msgs.filter(m => !m.seen && m.sender === 'user').length;
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer';
+                    div.onclick = () => openSupportChat(uid, last.userName);
+                    div.innerHTML = `
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">${getInitials(last.userName)}</div>
+                        <div class="flex-1 min-w-0"><p class="font-medium text-sm truncate">${escapeHtml(last.userName)}</p><p class="text-xs text-gray-500 truncate">${escapeHtml(last.text)}</p></div>
+                        ${unread > 0 ? `<span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">${unread}</span>` : ''}`;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                container.innerHTML = '<p class="text-red-500 text-sm text-center py-4">লোড করতে সমস্যা</p>';
+            }
         }
 
         async function openSupportChat(userId, userName) {
             showScreen('screen-support-chat');
             document.getElementById('support-chat-name').textContent = userName;
-
-            const chatContainer = document.getElementById('support-chat-messages');
-            chatContainer.innerHTML = '';
-
-            // Mark messages as seen
-            const q = query(
-                collection(db, 'supportMessages'),
-                where('userId', '==', userId),
-                orderBy('createdAt', 'asc')
-            );
-
-            const snapshot = await getDocs(q);
-            snapshot.forEach(async (doc) => {
-                const msg = { id: doc.id, ...doc.data() };
-
-                // Mark as seen
-                if (!msg.seen && msg.sender === 'user') {
-                    await updateDoc(doc(db, 'supportMessages', doc.id), { seen: true });
+            document.getElementById('support-chat-name').dataset.userId = userId;
+            const container = document.getElementById('support-chat-messages');
+            container.innerHTML = '';
+            try {
+                const snap = await getDocs(query(collection(db, 'supportMessages'), where('userId','==',userId), orderBy('createdAt','asc')));
+                for (const d of snap.docs) {
+                    const m = { id: d.id, ...d.data() };
+                    if (!m.seen && m.sender === 'user') {
+                        await updateDoc(doc(db, 'supportMessages', d.id), { seen: true });
+                    }
+                    const isAdm = m.sender === 'admin';
+                    const div = document.createElement('div');
+                    div.className = `flex ${isAdm?'justify-end':'justify-start'} mb-2`;
+                    div.innerHTML = `<div class="max-w-[80%] ${isAdm?'bg-indigo-500 text-white':'bg-gray-100 text-gray-800'} px-4 py-2 rounded-2xl ${isAdm?'rounded-br-sm':'rounded-bl-sm'}"><p class="text-sm">${escapeHtml(m.text)}</p><div class="flex items-center justify-end gap-1 mt-1"><span class="text-[10px] ${isAdm?'text-indigo-200':'text-gray-400'}">${formatTime(m.createdAt)}</span>${isAdm?`<span class="text-[10px] ${m.seen?'text-blue-200':'text-indigo-300'}">${m.seen?'✔✔':'✔'}</span>`:''}</div></div>`;
+                    container.appendChild(div);
                 }
-
-                const div = document.createElement('div');
-                const isAdmin = msg.sender === 'admin';
-                div.className = `flex ${isAdmin ? 'justify-end' : 'justify-start'} mb-2`;
-                div.innerHTML = `
-                    <div class="max-w-[80%] ${isAdmin ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-800'} px-4 py-2 rounded-2xl ${isAdmin ? 'rounded-br-sm' : 'rounded-bl-sm'}">
-                        <p class="text-sm">${escapeHtml(msg.text)}</p>
-                        <div class="flex items-center justify-end gap-1 mt-1">
-                            <span class="text-[10px] ${isAdmin ? 'text-indigo-200' : 'text-gray-400'}">${formatTime(msg.createdAt)}</span>
-                            ${isAdmin ? `
-                                <span class="text-[10px] ${msg.seen ? 'text-blue-200' : 'text-indigo-300'}">
-                                    ${msg.seen ? '✔✔' : '✔'}
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-                chatContainer.appendChild(div);
-            });
-
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+                container.scrollTop = container.scrollHeight;
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         async function sendSupportReply() {
             const input = document.getElementById('support-reply-input');
             const text = input.value.trim();
             if (!text) return;
-
-            const userId = document.getElementById('support-chat-name').dataset.userId || currentUser.id;
-
+            const userId = document.getElementById('support-chat-name').dataset.userId;
             await addDoc(collection(db, 'supportMessages'), {
-                userId,
-                userName: currentUser.name,
-                text,
-                sender: 'admin',
-                seen: false,
-                delivered: true,
-                createdAt: serverTimestamp()
+                userId, userName: currentUser.name, text, sender: 'admin',
+                seen: false, delivered: true, createdAt: serverTimestamp()
             });
-
             input.value = '';
             openSupportChat(userId, document.getElementById('support-chat-name').textContent);
         }
 
-        // ============================================================
-        // MEMBER SUPPORT (User side)
-        // ============================================================
         async function sendUserSupport() {
             const input = document.getElementById('user-support-input');
             const text = input.value.trim();
             if (!text) return;
-
             await addDoc(collection(db, 'supportMessages'), {
-                userId: currentUser.id,
-                userName: currentUser.name,
-                text,
-                sender: 'user',
-                seen: false,
-                delivered: true,
-                createdAt: serverTimestamp()
+                userId: currentUser.id, userName: currentUser.name, text,
+                sender: 'user', seen: false, delivered: true, createdAt: serverTimestamp()
             });
-
             input.value = '';
             loadUserSupportMessages();
         }
@@ -826,332 +637,179 @@
         async function loadUserSupportMessages() {
             const container = document.getElementById('user-support-messages');
             if (!container) return;
-
-            const q = query(
-                collection(db, 'supportMessages'),
-                where('userId', '==', currentUser.id),
-                orderBy('createdAt', 'asc')
-            );
-
-            const snapshot = await getDocs(q);
-            container.innerHTML = '';
-
-            snapshot.forEach(doc => {
-                const msg = doc.data();
-                const isAdmin = msg.sender === 'admin';
-                const div = document.createElement('div');
-                div.className = `flex ${isAdmin ? 'justify-start' : 'justify-end'} mb-2`;
-                div.innerHTML = `
-                    <div class="max-w-[80%] ${isAdmin ? 'bg-white border border-gray-200 text-gray-800' : 'bg-indigo-500 text-white'} px-4 py-2 rounded-2xl ${isAdmin ? 'rounded-bl-sm' : 'rounded-br-sm'}">
-                        <p class="text-sm">${escapeHtml(msg.text)}</p>
-                        <div class="flex items-center justify-end gap-1 mt-1">
-                            <span class="text-[10px] ${isAdmin ? 'text-gray-400' : 'text-indigo-200'}">${formatTime(msg.createdAt)}</span>
-                            ${!isAdmin ? `
-                                <span class="text-[10px] ${msg.seen ? 'text-blue-200' : 'text-indigo-300'}">
-                                    ${msg.seen ? '✔✔' : '✔'}
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-
-            container.scrollTop = container.scrollHeight;
+            try {
+                const snap = await getDocs(query(collection(db, 'supportMessages'), where('userId','==',currentUser.id), orderBy('createdAt','asc')));
+                container.innerHTML = '';
+                snap.forEach(d => {
+                    const m = d.data();
+                    const isAdm = m.sender === 'admin';
+                    const div = document.createElement('div');
+                    div.className = `flex ${isAdm?'justify-start':'justify-end'} mb-2`;
+                    div.innerHTML = `<div class="max-w-[80%] ${isAdm?'bg-white border border-gray-200':'bg-indigo-500 text-white'} px-4 py-2 rounded-2xl"><p class="text-sm">${escapeHtml(m.text)}</p></div>`;
+                    container.appendChild(div);
+                });
+                container.scrollTop = container.scrollHeight;
+            } catch (e) {
+                console.error(e);
+            }
         }
 
-        // ============================================================
-        // EXPOSE FUNCTIONS TO GLOBAL SCOPE (for onclick handlers)
-        // ============================================================
+        // ============ EXPOSE TO WINDOW ============
         window.toggleLike = toggleLike;
         window.votePoll = votePoll;
-        window.editPost = editPost;
         window.deletePost = deletePost;
-        window.startNewBatch = startNewBatch;
         window.createPost = createPost;
+        window.startNewBatch = startNewBatch;
         window.openSupportChat = openSupportChat;
         window.sendSupportReply = sendSupportReply;
         window.sendUserSupport = sendUserSupport;
         window.showScreen = showScreen;
 
-        // ============================================================
-        // DOM READY - INITIALIZATION
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize notification sound
-            notificationSound = new Audio(NOTIFICATION_SOUND_URL);
-            notificationSound.volume = 0.5;
+        // ============ DOM READY ============
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('registration-form').addEventListener('submit', handleRegistrationFormSubmit);
+            document.getElementById('btn-enable-notification').addEventListener('click', onNotificationAllow);
+            document.getElementById('btn-skip-notification').addEventListener('click', () => {
+                showToast('নোটিফিকেশন ছাড়া গ্রুপে যোগ দেওয়া যাবে না', 'error');
+            });
 
-            // Check for saved session
-            const savedUser = localStorage.getItem('community_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                // Verify user still exists in Firestore
-                getDoc(doc(db, 'users', currentUser.id)).then(docSnap => {
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        // Check if user's batch matches current batch
-                        getDoc(doc(db, 'settings', 'currentBatch')).then(batchSnap => {
-                            const currentBatch = batchSnap.exists() ? batchSnap.data().batchId : 'batch_1';
-                            if (userData.batchId !== currentBatch && userData.phone !== ADMIN_PHONE) {
-                                showScreen('screen-blocked');
-                            } else {
-                                currentUser = { id: docSnap.id, ...userData };
-                                initializeAppUI();
-                            }
-                        });
+            document.getElementById('btn-admin')?.addEventListener('click', () => {
+                showScreen('screen-admin');
+                loadAdminData();
+            });
+            document.getElementById('btn-back-from-admin')?.addEventListener('click', () => showScreen('screen-main'));
+            document.getElementById('btn-new-batch')?.addEventListener('click', startNewBatch);
+            document.getElementById('btn-create-post')?.addEventListener('click', createPost);
+            document.getElementById('btn-back-from-support')?.addEventListener('click', () => showScreen('screen-admin'));
+            document.getElementById('btn-back-from-user-support')?.addEventListener('click', () => showScreen('screen-main'));
+            document.getElementById('btn-send-support-reply')?.addEventListener('click', sendSupportReply);
+            document.getElementById('btn-send-user-support')?.addEventListener('click', sendUserSupport);
+            document.getElementById('btn-support-inbox')?.addEventListener('click', () => {
+                if (isAdmin) { showScreen('screen-admin'); loadAdminData(); document.getElementById('admin-tab-support')?.click(); }
+                else { showScreen('screen-user-support'); loadUserSupportMessages(); }
+            });
+            document.getElementById('btn-logout')?.addEventListener('click', () => {
+                localStorage.removeItem('community_user');
+                location.reload();
+            });
+
+            document.getElementById('post-type')?.addEventListener('change', (e) => {
+                const t = e.target.value;
+                document.getElementById('post-link-group')?.classList.toggle('hidden', t !== 'link');
+                document.getElementById('post-image-group')?.classList.toggle('hidden', t !== 'image');
+                document.getElementById('post-video-group')?.classList.toggle('hidden', t !== 'video');
+                document.getElementById('post-poll-group')?.classList.toggle('hidden', t !== 'poll');
+            });
+            document.getElementById('btn-add-poll-option')?.addEventListener('click', () => {
+                const c = document.getElementById('poll-options-container');
+                const inp = document.createElement('input');
+                inp.type = 'text';
+                inp.className = 'poll-option-input w-full px-3 py-2 rounded-lg border border-gray-200 mb-2 text-sm';
+                inp.placeholder = `অপশন ${c.children.length + 1}`;
+                c.appendChild(inp);
+            });
+
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.admin-tab').forEach(t => {
+                        t.classList.remove('border-indigo-500','text-indigo-600');
+                        t.classList.add('border-transparent','text-gray-500');
+                    });
+                    tab.classList.remove('border-transparent','text-gray-500');
+                    tab.classList.add('border-indigo-500','text-indigo-600');
+                    const name = tab.dataset.tab;
+                    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+                    document.getElementById(`admin-tab-content-${name}`)?.classList.remove('hidden');
+                });
+            });
+
+            const saved = localStorage.getItem('community_user');
+            if (saved) {
+                try {
+                    currentUser = JSON.parse(saved);
+                    const snap = await getDoc(doc(db, 'users', currentUser.id));
+                    if (snap.exists()) {
+                        currentUser = { id: snap.id, ...snap.data() };
+                        const bSnap = await getDoc(doc(db, 'settings', 'currentBatch'));
+                        const batchId = bSnap.exists() ? bSnap.data().batchId : 'batch_1';
+                        if (currentUser.batchId !== batchId && currentUser.phone !== ADMIN_PHONE) {
+                            showScreen('screen-blocked');
+                        } else {
+                            connectOneSignal(currentUser.id);
+                            initializeAppUI();
+                        }
                     } else {
                         localStorage.removeItem('community_user');
                         showScreen('screen-register');
                     }
-                }).catch(() => {
+                } catch (e) {
                     localStorage.removeItem('community_user');
                     showScreen('screen-register');
-                });
+                }
             } else {
                 showScreen('screen-register');
             }
-
-            // ============================================================
-            // REGISTRATION FORM HANDLER
-            // ============================================================
-            document.getElementById('registration-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('reg-name').value.trim();
-                const phone = document.getElementById('reg-phone').value.trim();
-                const gmail = document.getElementById('reg-gmail').value.trim();
-
-                if (!name || !phone) {
-                    showToast('নাম এবং ফোন নম্বর দিন', 'warning');
-                    return;
-                }
-
-                await handleRegistration(name, phone, gmail);
-            });
-
-            // ============================================================
-            // MANDATORY NOTIFICATION POPUP HANDLER
-            // ============================================================
-            document.getElementById('btn-enable-notification').addEventListener('click', async () => {
-                const granted = await requestNotificationPermission();
-                if (granted) {
-                    document.getElementById('notification-popup').classList.add('hidden');
-                    document.getElementById('notification-status').textContent = '✅ নোটিফিকেশন চালু আছে';
-                    document.getElementById('notification-status').className = 'text-sm text-green-600';
-                } else {
-                    showToast('নোটিফিকেশন ছাড়া গ্রুপে যোগ দেওয়া যাবে না', 'error');
-                }
-            });
-
-            document.getElementById('btn-skip-notification').addEventListener('click', () => {
-                showToast('নোটিফিকেশন ছাড়া গ্রুপে যোগ দেওয়া যাবে না। অনুগ্রহ করে এলাও করুন।', 'error');
-            });
-
-            // ============================================================
-            // ADMIN PANEL HANDLERS
-            // ============================================================
-            document.getElementById('btn-admin').addEventListener('click', () => {
-                showScreen('screen-admin');
-                loadAdminData();
-            });
-
-            document.getElementById('btn-back-from-admin').addEventListener('click', () => {
-                showScreen('screen-main');
-            });
-
-            document.getElementById('btn-new-batch').addEventListener('click', startNewBatch);
-
-            document.getElementById('post-type').addEventListener('change', (e) => {
-                const type = e.target.value;
-                document.getElementById('post-link-group').classList.toggle('hidden', type !== 'link');
-                document.getElementById('post-image-group').classList.toggle('hidden', type !== 'image');
-                document.getElementById('post-video-group').classList.toggle('hidden', type !== 'video');
-                document.getElementById('post-poll-group').classList.toggle('hidden', type !== 'poll');
-            });
-
-            document.getElementById('btn-create-post').addEventListener('click', createPost);
-
-            // Add poll option
-            document.getElementById('btn-add-poll-option').addEventListener('click', () => {
-                const container = document.getElementById('poll-options-container');
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'poll-option-input w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm mb-2';
-                input.placeholder = `অপশন ${container.children.length + 1}`;
-                container.appendChild(input);
-            });
-
-            // ============================================================
-            // SUPPORT INBOX HANDLERS
-            // ============================================================
-            document.getElementById('btn-support-inbox').addEventListener('click', () => {
-                if (isAdmin) {
-                    showScreen('screen-admin');
-                    loadAdminData();
-                    document.getElementById('admin-tab-support').click();
-                } else {
-                    showScreen('screen-user-support');
-                    loadUserSupportMessages();
-                }
-            });
-
-            document.getElementById('btn-back-from-support').addEventListener('click', () => {
-                showScreen('screen-main');
-            });
-
-            document.getElementById('btn-back-from-user-support').addEventListener('click', () => {
-                showScreen('screen-main');
-            });
-
-            document.getElementById('btn-send-support-reply').addEventListener('click', sendSupportReply);
-            document.getElementById('btn-send-user-support').addEventListener('click', sendUserSupport);
-
-            // ============================================================
-            // LOGOUT
-            // ============================================================
-            document.getElementById('btn-logout').addEventListener('click', () => {
-                localStorage.removeItem('community_user');
-                currentUser = null;
-                unsubscribers.forEach(u => u());
-                unsubscribers = [];
-                showScreen('screen-register');
-            });
-
-            // ============================================================
-            // ADMIN TABS
-            // ============================================================
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.admin-tab').forEach(t => {
-                        t.classList.remove('border-indigo-500', 'text-indigo-600');
-                        t.classList.add('border-transparent', 'text-gray-500');
-                    });
-                    tab.classList.remove('border-transparent', 'text-gray-500');
-                    tab.classList.add('border-indigo-500', 'text-indigo-600');
-
-                    const tabName = tab.dataset.tab;
-                    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
-                    document.getElementById(`admin-tab-content-${tabName}`).classList.remove('hidden');
-                });
-            });
         });
     </script>
+    
     <style>
         * { -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
         .animate-slide-in { animation: slideIn 0.3s ease-out; }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        /* Custom scrollbar */
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 4px; }
-        /* Hide number input arrows */
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-    <!-- ============================================================
-         SCREEN: REGISTRATION
-         ============================================================ -->
     <div id="screen-register" class="screen min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md">
-            <!-- Logo -->
             <div class="text-center mb-8">
-                <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
+                <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
                 <h1 class="text-2xl font-bold text-gray-900">কমিউনিটি প্ল্যাটফর্ম</h1>
-                <p class="text-gray-500 text-sm mt-1">গ্রুপে যোগ দিতে নিচের তথ্য দিন</p>
+                <p class="text-gray-500 text-sm mt-1">গ্রুপে যোগ দিতে তথ্য দিন</p>
             </div>
-
-            <!-- Registration Card -->
-            <div class="bg-white rounded-2xl shadow-xl shadow-gray-100 border border-gray-100 p-6">
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
                 <form id="registration-form">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">আপনার নাম *</label>
-                            <input type="text" id="reg-name" required
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-sm"
-                                placeholder="যেমন: করিম আহমেদ">
+                            <input type="text" id="reg-name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none text-sm" placeholder="যেমন: করিম আহমেদ">
                         </div>
-
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">ফোন নম্বর *</label>
-                            <div class="flex">
-                                <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-sm font-medium">
-                                    +880
-                                </span>
-                                <input type="tel" id="reg-phone" required
-                                    class="w-full px-4 py-3 rounded-r-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-sm"
-                                    placeholder="01XXXXXXXXX">
-                            </div>
+                            <input type="tel" id="reg-phone" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none text-sm" placeholder="01XXXXXXXXX">
                         </div>
-
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">জিমেইল (ঐচ্ছিক)</label>
-                            <input type="email" id="reg-gmail"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-sm"
-                                placeholder="example@gmail.com">
+                            <input type="email" id="reg-gmail" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none text-sm" placeholder="example@gmail.com">
                         </div>
                     </div>
-
-                    <button type="submit"
-                        class="w-full mt-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3.5 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200 text-sm">
-                        গ্রুপে যোগ দিন
-                    </button>
+                    <button type="submit" class="w-full mt-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3.5 rounded-xl text-sm">গ্রুপে যোগ দিন</button>
                 </form>
             </div>
-
-            <!-- Notification Status -->
-            <div id="notification-status" class="text-center mt-4 text-sm text-gray-400">
-                ⚠️ নোটিফিকেশন অনুমতি আবশ্যক
-            </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         SCREEN: BLOCKED (Old batch user)
-         ============================================================ -->
     <div id="screen-blocked" class="screen hidden min-h-screen flex items-center justify-center p-4">
-        <div class="w-full max-w-md text-center">
+        <div class="text-center max-w-md">
             <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                </svg>
+                <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636"/></svg>
             </div>
             <h2 class="text-xl font-bold text-gray-900 mb-2">দুঃখিত, আপনি ব্লক হয়েছেন</h2>
-            <p class="text-gray-500 text-sm mb-6">আপনি ইতিমধ্যে একটি পুরানো ব্যাচে নিবন্ধিত ছিলেন। নতুন ব্যাচে যোগ দিতে পারবেন না।</p>
-            <button onclick="localStorage.clear(); location.reload();"
-                class="px-6 py-3 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors">
-                নতুন করে শুরু করুন
-            </button>
+            <p class="text-gray-500 text-sm">আপনি পুরানো ব্যাচের সদস্য। নতুন ব্যাচে যোগ দিতে পারবেন না।</p>
         </div>
     </div>
 
-    <!-- ============================================================
-         SCREEN: MAIN FEED
-         ============================================================ -->
     <div id="screen-main" class="screen hidden min-h-screen bg-gray-50">
-        <!-- Header -->
         <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
             <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </div>
                     <div>
                         <h1 class="font-bold text-gray-900 text-sm">কমিউনিটি</h1>
@@ -1159,50 +817,23 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button id="btn-support-inbox" class="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="সাপোর্ট ইনবক্স">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                        </svg>
-                    </button>
-                    <button id="btn-admin" class="hidden p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="অ্যাডমিন প্যানেল">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                    </button>
-                    <button id="btn-logout" class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="লগআউট">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                    </button>
+                    <button id="btn-support-inbox" class="p-2 text-gray-500 hover:bg-indigo-50 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></button>
+                    <button id="btn-admin" class="hidden p-2 text-gray-500 hover:bg-indigo-50 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+                    <button id="btn-logout" class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg></button>
                 </div>
             </div>
         </header>
-
-        <!-- Posts Feed -->
-        <main class="max-w-2xl mx-auto px-4 py-4">
-            <div id="posts-container"></div>
-        </main>
+        <main class="max-w-2xl mx-auto px-4 py-4"><div id="posts-container"></div></main>
     </div>
 
-    <!-- ============================================================
-         SCREEN: ADMIN PANEL
-         ============================================================ -->
     <div id="screen-admin" class="screen hidden min-h-screen bg-gray-50">
         <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
             <div class="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-                <button id="btn-back-from-admin" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </button>
+                <button id="btn-back-from-admin" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
                 <h1 class="font-bold text-gray-900">অ্যাডমিন প্যানেল</h1>
-                <span class="bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full">Admin</span>
             </div>
         </header>
-
         <div class="max-w-4xl mx-auto px-4 py-4">
-            <!-- Stats Cards -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="bg-white rounded-xl border border-gray-100 p-4">
                     <p class="text-xs text-gray-500 mb-1">মোট সদস্য</p>
@@ -1213,232 +844,102 @@
                     <p class="text-sm font-semibold text-indigo-600">সক্রিয়</p>
                 </div>
             </div>
-
-            <!-- New Batch Button -->
-            <button id="btn-new-batch" class="w-full mb-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold py-3 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-200 text-sm flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                নতুন ব্যাচ শুরু করুন
-            </button>
-
-            <!-- Admin Tabs -->
-            <div class="flex border-b border-gray-200 mb-4 overflow-x-auto">
-                <button class="admin-tab px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600 whitespace-nowrap" data-tab="create">
-                    পোস্ট তৈরি
-                </button>
-                <button class="admin-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 whitespace-nowrap" data-tab="support" id="admin-tab-support">
-                    সাপোর্ট ইনবক্স
-                </button>
+            <button id="btn-new-batch" class="w-full mb-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold py-3 rounded-xl text-sm">নতুন ব্যাচ শুরু করুন</button>
+            <div class="flex border-b border-gray-200 mb-4">
+                <button class="admin-tab px-4 py-2 text-sm font-medium border-b-2 border-indigo-500 text-indigo-600" data-tab="create">পোস্ট তৈরি</button>
+                <button class="admin-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500" data-tab="support" id="admin-tab-support">সাপোর্ট ইনবক্স</button>
             </div>
-
-            <!-- Tab: Create Post -->
             <div id="admin-tab-content-create" class="admin-tab-content">
-                <div class="bg-white rounded-2xl border border-gray-100 p-5">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">পোস্ট টাইপ</label>
-                            <select id="post-type" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm">
-                                <option value="text">টেক্সট</option>
-                                <option value="image">ছবি / স্ক্রিনশট</option>
-                                <option value="video">ভিডিও</option>
-                                <option value="link">লিংক (YouTube/Zoom/Facebook)</option>
-                                <option value="poll">ভোট / পোল</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">বিবরণ / টেক্সট</label>
-                            <textarea id="post-text" rows="3"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm resize-none"
-                                placeholder="কিছু লিখুন..."></textarea>
-                        </div>
-
-                        <!-- Link Input -->
-                        <div id="post-link-group" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">লিংক URL</label>
-                            <input type="url" id="post-link"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm"
-                                placeholder="https://youtube.com/watch?v=...">
-                        </div>
-
-                        <!-- Image Upload -->
-                        <div id="post-image-group" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">ছবি আপলোড</label>
-                            <input type="file" id="post-image" accept="image/*"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100">
-                        </div>
-
-                        <!-- Video Upload -->
-                        <div id="post-video-group" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">ভিডিও আপলোড</label>
-                            <input type="file" id="post-video" accept="video/*"
-                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100">
-                        </div>
-
-                        <!-- Poll Options -->
-                        <div id="post-poll-group" class="hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">পোল অপশনসমূহ</label>
-                            <div id="poll-options-container">
-                                <input type="text" class="poll-option-input w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm mb-2" placeholder="অপশন ১">
-                                <input type="text" class="poll-option-input w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm mb-2" placeholder="অপশন ২">
-                            </div>
-                            <button id="btn-add-poll-option" class="text-indigo-600 text-xs font-medium hover:text-indigo-700 mt-1">
-                                + আরও অপশন যোগ করুন
-                            </button>
-                        </div>
-
-                        <button id="btn-create-post"
-                            class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200 text-sm">
-                            পোস্ট করুন
-                        </button>
+                <div class="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">পোস্ট টাইপ</label>
+                        <select id="post-type" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm">
+                            <option value="text">টেক্সট</option>
+                            <option value="image">ছবি</option>
+                            <option value="video">ভিডিও</option>
+                            <option value="link">লিংক</option>
+                            <option value="poll">ভোট / পোল</option>
+                        </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">বিবরণ</label>
+                        <textarea id="post-text" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm resize-none" placeholder="কিছু লিখুন..."></textarea>
+                    </div>
+                    <div id="post-link-group" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">লিংক</label>
+                        <input type="url" id="post-link" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm" placeholder="https://...">
+                    </div>
+                    <div id="post-image-group" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">ছবি</label>
+                        <input type="file" id="post-image" accept="image/*" class="w-full text-sm">
+                    </div>
+                    <div id="post-video-group" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">ভিডিও</label>
+                        <input type="file" id="post-video" accept="video/*" class="w-full text-sm">
+                    </div>
+                    <div id="post-poll-group" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">পোল অপশন</label>
+                        <div id="poll-options-container">
+                            <input type="text" class="poll-option-input w-full px-3 py-2 rounded-lg border border-gray-200 text-sm mb-2" placeholder="অপশন ১">
+                            <input type="text" class="poll-option-input w-full px-3 py-2 rounded-lg border border-gray-200 text-sm mb-2" placeholder="অপশন ২">
+                        </div>
+                        <button id="btn-add-poll-option" class="text-indigo-600 text-xs font-medium mt-1">+ আরও অপশন</button>
+                    </div>
+                    <button id="btn-create-post" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 rounded-xl text-sm">পোস্ট করুন</button>
                 </div>
             </div>
-
-            <!-- Tab: Support Inbox -->
             <div id="admin-tab-content-support" class="admin-tab-content hidden">
                 <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                    <div class="p-4 border-b border-gray-100">
-                        <h3 class="font-semibold text-gray-900 text-sm">সাপোর্ট মেসেজ</h3>
-                        <p class="text-xs text-gray-400 mt-0.5">সদস্যদের পাঠানো মেসেজ দেখুন ও উত্তর দিন</p>
-                    </div>
-                    <div id="admin-inbox-list" class="p-2">
-                        <p class="text-gray-400 text-sm text-center py-4">লোড হচ্ছে...</p>
-                    </div>
+                    <div class="p-4 border-b border-gray-100"><h3 class="font-semibold text-sm">সাপোর্ট মেসেজ</h3></div>
+                    <div id="admin-inbox-list" class="p-2"><p class="text-gray-400 text-sm text-center py-4">লোড হচ্ছে...</p></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         SCREEN: SUPPORT CHAT (Admin viewing a user's messages)
-         ============================================================ -->
     <div id="screen-support-chat" class="screen hidden min-h-screen bg-gray-50 flex flex-col">
         <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
             <div class="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-                <button onclick="showScreen('screen-admin')" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </button>
-                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                    U
-                </div>
-                <h1 id="support-chat-name" class="font-semibold text-gray-900 text-sm">User</h1>
+                <button onclick="showScreen('screen-admin')" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+                <h1 id="support-chat-name" class="font-semibold text-sm">User</h1>
             </div>
         </header>
-
         <div id="support-chat-messages" class="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full"></div>
-
-        <div class="bg-white border-t border-gray-100 p-3">
+        <div class="bg-white border-t p-3">
             <div class="max-w-2xl mx-auto flex gap-2">
-                <input type="text" id="support-reply-input" placeholder="উত্তর লিখুন..."
-                    class="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm">
-                <button id="btn-send-support-reply"
-                    class="bg-indigo-500 text-white px-5 rounded-xl hover:bg-indigo-600 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                    </svg>
-                </button>
+                <input type="text" id="support-reply-input" placeholder="উত্তর লিখুন..." class="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm">
+                <button id="btn-send-support-reply" class="bg-indigo-500 text-white px-5 rounded-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         SCREEN: USER SUPPORT INBOX
-         ============================================================ -->
     <div id="screen-user-support" class="screen hidden min-h-screen bg-gray-50 flex flex-col">
         <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
             <div class="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-                <button id="btn-back-from-user-support" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </button>
-                <div>
-                    <h1 class="font-semibold text-gray-900 text-sm">সাপোর্ট ইনবক্স</h1>
-                    <p class="text-xs text-gray-400">শুধুমাত্র অ্যাডমিনের সাথে চ্যাট</p>
-                </div>
+                <button id="btn-back-from-user-support" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+                <div><h1 class="font-semibold text-sm">সাপোর্ট ইনবক্স</h1><p class="text-xs text-gray-400">শুধু অ্যাডমিনের সাথে চ্যাট</p></div>
             </div>
         </header>
-
         <div id="user-support-messages" class="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full"></div>
-
-        <div class="bg-white border-t border-gray-100 p-3">
+        <div class="bg-white border-t p-3">
             <div class="max-w-2xl mx-auto flex gap-2">
-                <input type="text" id="user-support-input" placeholder="মেসেজ লিখুন..."
-                    class="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm">
-                <button id="btn-send-user-support"
-                    class="bg-indigo-500 text-white px-5 rounded-xl hover:bg-indigo-600 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                    </svg>
-                </button>
+                <input type="text" id="user-support-input" placeholder="মেসেজ লিখুন..." class="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm">
+                <button id="btn-send-user-support" class="bg-indigo-500 text-white px-5 rounded-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-         MANDATORY NOTIFICATION POPUP (shown after registration)
-         ============================================================ -->
     <div id="notification-popup" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-slide-in">
             <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                </svg>
+                <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-2">🔔 নোটিফিকেশন চালু করুন</h3>
-            <p class="text-gray-600 text-sm mb-6 leading-relaxed">
-                কোনো কিছু আপডেট মিস করতে না চাইলে <strong>এলাও বাটনে ক্লিক করুন</strong>
-            </p>
-            <div class="space-y-2">
-                <button id="btn-enable-notification"
-                    class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200 text-sm">
-                    ✅ এলাও করুন
-                </button>
-                <button id="btn-skip-notification"
-                    class="w-full text-gray-400 text-xs py-2 hover:text-gray-600 transition-colors">
-                    পরে করব
-                </button>
-            </div>
+            <p class="text-gray-600 text-sm mb-6 leading-relaxed">কোনো কিছু আপডেট মিস করতে না চাইলে <strong>এলাও বাটনে ক্লিক করুন</strong></p>
+            <button id="btn-enable-notification" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold py-3 rounded-xl text-sm">✅ এলাও করুন</button>
+            <button id="btn-skip-notification" class="w-full text-gray-400 text-xs py-2 mt-2">পরে করব</button>
         </div>
     </div>
 
-    <!-- ============================================================
-         NOTIFICATION POPUP SCRIPT (show after registration)
-         ============================================================ -->
-    <script>
-        // Show notification popup after registration (when user first lands)
-        const originalHandleRegistration = window.handleRegistration;
-        // Override after DOM ready - handled in main module above
-        // The popup is shown via the registration flow
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if we should show the popup on first visit
-            const hasSeenPopup = localStorage.getItem('notification_popup_seen');
-            const savedUser = localStorage.getItem('community_user');
-
-            if (!hasSeenPopup && !savedUser) {
-                // Show popup on first visit (before registration)
-                setTimeout(() => {
-                    document.getElementById('notification-popup').classList.remove('hidden');
-                    document.getElementById('notification-popup').classList.add('flex');
-                }, 500);
-            }
-
-            // Mark popup as seen when user interacts
-            document.getElementById('btn-enable-notification')?.addEventListener('click', () => {
-                localStorage.setItem('notification_popup_seen', 'true');
-                document.getElementById('notification-popup').classList.add('hidden');
-                document.getElementById('notification-popup').classList.remove('flex');
-            });
-
-            document.getElementById('btn-skip-notification')?.addEventListener('click', () => {
-                // Don't mark as seen - force them to see it again
-                // But allow them to continue (they'll be prompted again)
-            });
-        });
-    </script>
 </body>
 </html>
