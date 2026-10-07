@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>কমিউনিটি প্ল্যাটফর্ম</title>
-<link rel="manifest" href="manifest.json">
+<!-- সাব-ফোল্ডারের জন্য অ্যাবসলিউট পাথ ব্যবহার করা হলো -->
+<link rel="manifest" href="/my-website/manifest.json">
 <meta name="theme-color" content="#6366f1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="কমিউনিটি">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="/my-website/icon-192.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
@@ -17,8 +18,9 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
         appId: "6f039946-596a-4750-a70e-3eac2f827f6c",
+        // এখানে শুরুতে / দেওয়া হয়েছে, যা সাব-ফোল্ডারের জন্য খুবই জরুরি
         serviceWorkerParam: { scope: "/my-website/" },
-        serviceWorkerPath: "my-website/OneSignalSDKWorker.js",
+        serviceWorkerPath: "/my-website/OneSignalSDKWorker.js", 
         allowLocalhostAsSecureOrigin: true
     });
 });
@@ -44,7 +46,6 @@ if ('serviceWorker' in navigator) {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-// Local Cache ইম্পোর্ট করা হলো সুপারফাস্ট স্পিডের জন্য
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, arrayUnion, arrayRemove, increment, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -124,8 +125,7 @@ async function upload(file, folder) {
 async function sendOneSignalPush(title, message, postId) {
     try {
         const payload = { app_id: OS_APP_ID, included_segments: ["Subscribed Users"], headings: { en: title }, contents: { en: message }, url: postId ? `${SITE}?post=${postId}` : SITE };
-        // corsproxy ব্যবহার করা হলো যেন ব্রাউজার ব্লক না করে
-        await fetch("https://corsproxy.io/?https://onesignal.com/api/v1/notifications", { 
+        await fetch("https://corsproxy.io/?url=https://onesignal.com/api/v1/notifications", { 
             method:"POST", 
             headers:{ "Content-Type":"application/json; charset=utf-8", "Authorization":"Basic " + OS_REST_KEY }, 
             body: JSON.stringify(payload) 
@@ -229,7 +229,7 @@ function renderShell() {
 function renderHeader() {
     if (!$('gn')) return;
     $('gn').textContent = group.name; $('gd').textContent = group.description;
-    $('gi').src = group.imageUrl || 'icon-192.png';
+    $('gi').src = group.imageUrl || '/my-website/icon-192.png';
 }
 
 function render() {
