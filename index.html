@@ -1,105 +1,206 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="bn" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>গুরুত্বপূর্ণ নোটিশ - নতুন ওয়েবসাইট</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            background-color: #ffffff;
-            max-width: 700px;
-            width: 100%;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        h1 {
-            color: #d9534f;
-            margin-bottom: 25px;
-            font-size: 26px;
-        }
-        .btn-container {
-            margin-bottom: 35px;
-        }
-        .btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-            color: white;
-            padding: 18px 40px;
-            font-size: 20px;
-            font-weight: bold;
-            text-decoration: none;
-            border-radius: 50px;
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-            transition: all 0.3s ease;
-        }
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6);
-        }
-        .notice-box {
-            background-color: #fff3cd;
-            border-left: 5px solid #ffc107;
-            padding: 20px;
-            border-radius: 6px;
-            text-align: left;
-            line-height: 1.8;
-            color: #856404;
-            font-size: 16px;
-        }
-        .notice-box h3 {
-            margin-bottom: 10px;
-            color: #856404;
-        }
-        .footer {
-            margin-top: 25px;
-            font-size: 14px;
-            color: #666;
-        }
-    </style>
+    <title>ফ্রি আর্নিং ও এফিলিয়েট ট্রেনিং কমিউনিটি</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 h-full flex flex-col justify-between font-sans">
 
-    <div class="container">
-        <h1>আমাদের নতুন অফিসিয়াল ওয়েবসাইটে স্বাগতম</h1>
-        
-        <div class="btn-container">
-            <a href="https://mrinal1271.github.io/taskbd/" class="btn" target="_blank">নতুন ওয়েবসাইটে একাউন্ট করতে এখানে ক্লিক করুন</a>
-        </div>
+    <!-- Mandatory Notification & Signup Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="bg-emerald-500/10 text-emerald-400 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">🔔</div>
+                <h2 class="text-xl font-bold">কমিউনিটিতে স্বাগতম!</h2>
+                <p class="text-sm text-slate-400 mt-1">গ্রুপে প্রবেশ করতে এবং ফ্রি আর্নিং আপডেট পেতে আপনার তথ্য দিয়ে নোটিফিকেশন অন করুন।</p>
+            </div>
 
-        <div class="notice-box">
-            <h3>⚠️ অত্যন্ত গুরুত্বপূর্ণ নোটিশ:</h3>
-            <p>
-                বর্তমান আমাদের পুরাতন ওয়েবসাইট কারিগরি ত্রুটির কারণে অনেকে ব্যালেন্স অটোমেটিক বাড়িয়ে নিয়ে উত্তোলন করেছে। বর্তমান আমাদের এক লাখ টাকার উপরে লস হয়েছে, তাই আমরা আমাদের প্রযুক্তি আবার নতুন করে সাজিয়েছি। বর্তমান সবকিছু ঠিকঠাক আছে। 
-            </p>
-            <p style="margin-top: 10px;">
-                আপনারা সবাই নতুন ওয়েবসাইটে জয়েন করে একটি অ্যাকাউন্ট করে কাজ করুন। আপনাদের পুরাতন অ্যাকাউন্টের ব্যালেন্সগুলো সব আগের অ্যাকাউন্টে উত্তোলন করার সময় অ্যাড করে দেওয়া হবে। অলরেডি আমাদের কাজ চলমান রয়েছে এবং সবাইকে আমরা সুন্দরভাবে আগের মতো পেমেন্ট দিচ্ছি। আপনারা সবাই পেমেন্ট আগের মতোই পেয়ে যাবেন।
-            </p>
-            <p style="margin-top: 10px; font-weight: bold;">
-                তাই এখন সবাই জয়েন করে আবার নতুন করে কাজ শুরু করুন। অলরেডি আমরা পেমেন্ট করা শুরু করেছি। উপরের বড় বাটনে ক্লিক করে আমাদের নতুন ওয়েবসাইটে সবাই অ্যাকাউন্ট করে কাজ শুরু করুন। ধন্যবাদ!
-            </p>
-        </div>
+            <form id="signupForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">আপনার নাম (আবশ্যক)</label>
+                    <input type="text" id="userName" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500" placeholder="পূর্ণ নাম লিখুন">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">মোবাইল নম্বর (আবশ্যক)</label>
+                    <input type="tel" id="userPhone" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500" placeholder="01XXXXXXXXX">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">জিমেইল (ঐচ্ছিক)</label>
+                    <input type="email" id="userEmail" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500" placeholder="example@gmail.com">
+                </div>
 
-        <div class="footer">
-            &copy; ২০২৬ সকল অধিকার সংরক্ষিত।
+                <button type="button" id="allowBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition duration-200 shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2">
+                    <span>🔔 নোটিফিকেশন এলাও করুন & প্রবেশ করুন</span>
+                </button>
+            </form>
+            <p id="errorMsg" class="text-rose-400 text-xs text-center mt-3 hidden">দুঃখিত! নোটিফিকেশন এলাও না করলে এই গ্রুপে প্রবেশ করা যাবে না।</p>
         </div>
     </div>
 
+    <!-- Main App Container -->
+    <div id="mainApp" class="hidden flex-1 flex flex-col max-w-2xl w-full mx-auto p-4 overflow-y-auto">
+        <!-- Header -->
+        <header class="bg-slate-800 border border-slate-700 rounded-2xl p-4 mb-4 flex justify-between items-center shadow-md">
+            <div>
+                <h1 class="font-bold text-lg text-emerald-400">ফ্রি আর্নিং ও এফিলিয়েট ট্রেনিং</h1>
+                <p class="text-xs text-slate-400" id="profileInfo">స</p>
+            </div>
+            <button onclick="localStorage.clear(); location.reload();" class="text-xs bg-slate-700 hover:bg-rose-600/20 hover:text-rose-400 text-slate-300 px-3 py-1.5 rounded-lg transition">লগআউট</button>
+        </header>
+
+        <!-- Admin Post Panel (Hidden by default, visible only for 01866989184) -->
+        <div id="adminPanel" class="hidden bg-slate-800 border border-emerald-500/50 rounded-2xl p-4 mb-4 shadow-lg">
+            <h2 class="text-sm font-bold text-emerald-400 mb-2">⚡ অ্যাডমিন পোস্ট প্যানেল</h2>
+            <form id="adminPostForm" class="space-y-3">
+                <textarea id="postContent" rows="3" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-emerald-500" placeholder="নতুন কোনো অফার, টিপস বা ট্রেনিং লিংক শেয়ার করুন..."></textarea>
+                <input type="text" id="postLink" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="বটন বা ভিডিও লিংক (ঐচ্ছিক)">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-4 py-2 rounded-xl transition">পোস্ট পাবলিশ করুন</button>
+            </form>
+        </div>
+
+        <!-- Community Feed -->
+        <div id="feedContainer" class="space-y-4 flex-1">
+            <!-- Dynamic Posts will load here -->
+            <div class="text-center text-slate-500 py-10">পোস্ট লোড হচ্ছে...</div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // User Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDkuMFfiBaX-eXnByyiq6naqmgbr2BDJ4I",
+            authDomain: "group-app-ab54f.firebaseapp.com",
+            projectId: "group-app-ab54f",
+            storageBucket: "group-app-ab54f.firebasestorage.app",
+            messagingSenderId: "1014775593877",
+            appId: "1:1014775593877:web:f88fa6cd7b812a7ab3549c",
+            measurementId: "G-WNE7ZNZK46"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const ADMIN_PHONE = "01866989184";
+
+        const authModal = document.getElementById('authModal');
+        const mainApp = document.getElementById('mainApp');
+        const allowBtn = document.getElementById('allowBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const adminPanel = document.getElementById('adminPanel');
+        const profileInfo = document.getElementById('profileInfo');
+        const adminPostForm = document.getElementById('adminPostForm');
+        const feedContainer = document.getElementById('feedContainer');
+
+        // Check if already registered
+        const savedUser = JSON.parse(localStorage.getItem('community_user'));
+        if (savedUser) {
+            authModal.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+            initApp(savedUser);
+        }
+
+        allowBtn.addEventListener('click', async () => {
+            const name = document.getElementById('userName').value.trim();
+            const phone = document.getElementById('userPhone').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+
+            if (!name || !phone) {
+                alert('দয়া করে নাম এবং মোবাইল নম্বরটি পূরণ করুন।');
+                return;
+            }
+
+            // Request Notification Permission
+            if (!("Notification" in window)) {
+                alert("আপনার ব্রাউজার পুশ নোটিফিকেশন সাপোর্ট করে না।");
+                return;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    const userData = { name, phone, email, timestamp: new Date().toISOString() };
+                    localStorage.setItem('community_user', JSON.stringify(userData));
+                    
+                    authModal.classList.add('hidden');
+                    mainApp.classList.remove('hidden');
+                    initApp(userData);
+                } else {
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.classList.remove('hidden');
+            }
+        });
+
+        function initApp(user) {
+            profileInfo.innerText = `${user.name} (${user.phone})`;
+
+            // Check Admin Access
+            if (user.phone === ADMIN_PHONE) {
+                adminPanel.classList.remove('hidden');
+            }
+
+            // Load Posts
+            loadPosts();
+        }
+
+        // Handle Admin Post Submission
+        adminPostForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('postContent').value;
+            const link = document.getElementById('postLink').value;
+
+            try {
+                await addDoc(collection(db, "posts"), {
+                    content,
+                    link,
+                    author: "Admin",
+                    createdAt: serverTimestamp()
+                });
+                adminPostForm.reset();
+                alert('পোস্ট সফলভাবে পাবলিশ হয়েছে!');
+            } catch (err) {
+                console.error(err);
+                alert('পোস্ট করতে সমস্যা হয়েছে।');
+            }
+        });
+
+        // Real-time Feed Listener
+        function loadPosts() {
+            const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                feedContainer.innerHTML = "";
+                if (snapshot.empty) {
+                    feedContainer.innerHTML = `<div class="text-center text-slate-500 py-10">এখনো কোনো পোস্ট করা হয়নি।</div>`;
+                    return;
+                }
+                snapshot.forEach((doc) => {
+                    const post = doc.data();
+                    const date = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('bn-BD') : 'এইমাত্র';
+                    
+                    let linkHtml = post.link ? `<a href="${post.link}" target="_blank" class="inline-block mt-3 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 hover:text-white transition">লিংক ভিজিট করুন ↗</a>` : '';
+
+                    const postEl = document.createElement('div');
+                    postEl.className = "bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-md";
+                    postEl.innerHTML = `
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-emerald-400">⚡ অ্যাডমিন ঘোষণা</span>
+                            <span class="text-[10px] text-slate-500">${date}</span>
+                        </div>
+                        <p class="text-sm text-slate-200 whitespace-pre-line leading-relaxed">${post.content}</p>
+                        ${linkHtml}
+                    `;
+                    feedContainer.appendChild(postEl);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
