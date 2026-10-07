@@ -85,7 +85,6 @@ if ('serviceWorker' in navigator) {
     setTimeout(function () { showAppError('লোড হতে বেশি সময় লাগছে'); }, 7000);
 })();
 </script>
-<!-- ======================================= -->
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -98,7 +97,6 @@ const OS_APP_ID = "6f039946-596a-4750-a70e-3eac2f827f6c";
 const OS_REST_KEY = "os_v2_app_n4bzsrsznjdvbjyoh2wc7at7nqlfqna6t7be3kewtiulwjm6yplndusra3wqdspauw5z2jxf4ogwu5pt7texehzagjmvc5obsgys6gi";
 const SITE = "https://mrinal1271.github.io/my-website/";
 
-// ফায়ারবেস ইনিশিয়ালাইজ + Local Caching
 const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, { localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}) });
 const storage = getStorage(app);
@@ -231,7 +229,22 @@ async function loadBatch() {
     }
 }
 
-// ==================== বুট (FIXED — isAdmin পরিবর্তনে shell রি-রেন্ডার) ====================
+// ==================== এডমিন ডকুমেন্ট খোঁজার হেল্পার ====================
+// একই ফোনে একাধিক ডকুমেন্ট থাকলে, isAdmin:true ওয়ালাটা খুঁজে বের করে
+async function findAdminDocByPhone(phone) {
+    if (!phone) return null;
+    try {
+        const q = await getDocs(query(
+            collection(db, 'users'),
+            where('phone', '==', phone),
+            where('isAdmin', '==', true)
+        ));
+        if (!q.empty) return { id: q.docs[0].id, ...q.docs[0].data() };
+    } catch (e) { console.warn('findAdminDocByPhone failed:', e); }
+    return null;
+}
+
+// ==================== বুট (FIXED) ====================
 async function boot() {
     const cachedMe = cache.load('cp_me');
     if (cachedMe && cachedMe.id) {
@@ -246,23 +259,32 @@ async function boot() {
                 try {
                     const s = await getDoc(doc(db, 'users', me.id));
                     if (!s.exists()) { cache.clearAll(); return location.reload(); }
-                    const fresh = { id: me.id, ...s.data() };
+                    let fresh = { id: me.id, ...s.data() };
+
+                    // 🔧 FIX: এই ডকুমেন্টে isAdmin নেই, কিন্তু একই ফোনে অ্যাডমিন ডকুমেন্ট আছে কি?
+                    if (fresh.isAdmin !== true && fresh.phone) {
+                        const adminDoc = await findAdminDocByPhone(fresh.phone);
+                        if (adminDoc) {
+                            console.log('⚡ Admin doc found, switching:', adminDoc.id);
+                            fresh = adminDoc;
+                            localStorage.setItem('cp_uid', adminDoc.id);
+                        }
+                    }
+
                     if (fresh.blocked && fresh.isAdmin !== true) return showBlocked();
                     const wasAdmin = isAdmin;
                     me = fresh;
                     isAdmin = fresh.isAdmin === true;
                     cache.saveMe(fresh);
-                    // ⚡ FIX: isAdmin পরিবর্তন হলে পুরো shell আবার রেন্ডার করব
                     if (wasAdmin !== isAdmin) {
                         renderShell();
-                        // বর্তমান tab যদি admin হয় কিন্তু isAdmin false হয়ে যায়
                         if (!isAdmin && tab === 'admin') tab = 'home';
                         render();
                     } else {
                         renderHeader();
                         if (tab === 'profile') render();
                     }
-                } catch (e) { console.warn('Verify failed (offline?):', e); }
+                } catch (e) { console.warn('Verify failed:', e); }
                 startListeners();
             })();
             return;
@@ -273,7 +295,19 @@ async function boot() {
         const id = localStorage.getItem('cp_uid');
         if (id) {
             const s = await getDoc(doc(db, 'users', id));
-            if (s.exists()) return enter({ id, ...s.data() });
+            if (s.exists()) {
+                let u = { id, ...s.data() };
+                // 🔧 FIX: একই ফোনে অ্যাডমিন ডকুমেন্ট থাকলে সেটা নাও
+                if (u.isAdmin !== true && u.phone) {
+                    const adminDoc = await findAdminDocByPhone(u.phone);
+                    if (adminDoc) {
+                        console.log('⚡ Admin doc found on boot:', adminDoc.id);
+                        u = adminDoc;
+                        localStorage.setItem('cp_uid', adminDoc.id);
+                    }
+                }
+                return enter(u);
+            }
             localStorage.removeItem('cp_uid');
         }
     } catch (e) { console.warn('User load failed:', e); }
@@ -335,7 +369,20 @@ async function register() {
 async function saveUser(name, phone, gmail) {
     try {
         const q = await getDocs(query(collection(db, 'users'), where('phone', '==', phone)));
-        if (!q.empty) { const d = q.docs[0]; return enter({ id: d.id, ...d.data() }); }
+        if (!q.empty) {
+            // 🔧 FIX: একই ফোনে একাধিক ডকুমেন্ট থাকলে, isAdmin:true ওয়ালাটা আগে নাও
+            const docs = q.docs.slice().sort((a, b) => {
+                const aA = a.data().isAdmin === true ? 1 : 0;
+                const bA = b.data().isAdmin === true ? 1 : 0;
+                if (bA !== aA) return bA - aA;
+                const at = a.data().joinedAt?.toMillis?.() || Infinity;
+                const bt = b.data().joinedAt?.toMillis?.() || Infinity;
+                return at - bt;
+            });
+            const d = docs[0];
+            console.log('🔍 Selected doc:', d.id, '| isAdmin:', d.data().isAdmin, '| total docs:', q.docs.length);
+            return enter({ id: d.id, ...d.data() });
+        }
         const data = { name, phone, gmail, batchId, blocked: false, isAdmin: false, joinedAt: serverTimestamp(), lastSeen: serverTimestamp(), viewedPosts: [] };
         const r = await addDoc(collection(db, 'users'), data);
         enter({ id: r.id, ...data, joinedAt: null });
@@ -391,7 +438,8 @@ function startListeners() {
             renderHeader();
         }
     });
-    onSnapshot(doc(db, 'users', me.id), s => {
+
+    onSnapshot(doc(db, 'users', me.id), async s => {
         if (s.exists()) {
             const data = s.data();
             if (data.blocked && data.isAdmin !== true) return showBlocked();
@@ -406,12 +454,26 @@ function startListeners() {
                     render();
                 }
             }
+        } else {
+            // 🔧 FIX: নিজের ডকুমেন্ট মুছে গেলে, একই ফোনে অ্যাডমিন ডকুমেন্ট খোঁজো
+            const adminDoc = await findAdminDocByPhone(me.phone);
+            if (adminDoc) {
+                console.log('⚡ Live: switching to admin doc:', adminDoc.id);
+                me = adminDoc;
+                isAdmin = true;
+                localStorage.setItem('cp_uid', adminDoc.id);
+                cache.saveMe(me);
+                renderShell();
+                render();
+            }
         }
     });
+
     onSnapshot(query(collection(db, 'users'), orderBy('joinedAt', 'desc')), s => {
         users = s.docs.map(d => ({ id: d.id, ...d.data() }));
         if (tab === 'members' || tab === 'admin') render();
     });
+
     onSnapshot(query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(30)), s => {
         posts = s.docs.map(d => ({ id: d.id, ...d.data() }));
         cache.savePosts(posts);
@@ -421,6 +483,7 @@ function startListeners() {
         firstPostLoad = false;
         if (tab === 'home') { renderHome(); handleDeepLink(); }
     });
+
     onSnapshot(collection(db, 'supportMessages'), s => {
         allMsgs = s.docs.map(d => ({ id: d.id, ...d.data() }));
         if (tab === 'support') renderSupport();
