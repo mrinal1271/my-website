@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ফ্রি আর্নিং ও এফিলিয়েট ট্রেনিং কমিউনিটি</title>
+    <title>অফিসিয়াল আর্নিং কমিউনিটি গ্রুপ</title>
     <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-950 text-slate-100 h-full flex flex-col justify-between font-sans selection:bg-emerald-500 selection:text-white">
 
-    <!-- Notification Sound Audio Element -->
+    <!-- Notification Sound -->
     <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <!-- Mandatory Notification & Signup Modal -->
-    <div id="authModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div id="authModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl">
             <div class="text-center mb-6">
-                <div class="bg-emerald-500/10 text-emerald-400 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
-                    <i class="fa-solid fa-bell animate-bounce"></i>
+                <div class="bg-emerald-500/10 text-emerald-400 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner animate-pulse">
+                    <i class="fa-solid fa-bell"></i>
                 </div>
                 <h2 class="text-xl font-bold text-white">কমিউনিটিতে স্বাগতম!</h2>
-                <p class="text-xs text-slate-400 mt-1">কোনো কিছু আপডেট মিস করতে না চাইলে এলাও বাটনে ক্লিক করুন।</p>
+                <p class="text-xs text-slate-400 mt-1">কোনো আপডেট বা লাইভ ক্লাস মিস করতে না চাইলে নিচের <b>এلاও</b> বাটনে ক্লিক করুন।</p>
             </div>
 
             <form id="signupForm" class="space-y-3.5">
@@ -52,7 +52,7 @@
         <header class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-4 flex justify-between items-center shadow-lg">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-lg">
-                    <i class="fa-solid fa-shield-halved"></i>
+                    <i class="fa-solid fa-users-rectangle"></i>
                 </div>
                 <div>
                     <h1 class="font-bold text-sm sm:text-base text-emerald-400">অফিসিয়াল আর্নিং গ্রুপ</h1>
@@ -60,10 +60,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="openInbox()" class="relative text-xs bg-slate-800 hover:bg-emerald-500/20 text-slate-300 px-3 py-2 rounded-xl transition font-medium flex items-center gap-1.5">
-                    <i class="fa-solid fa-comment-dots text-emerald-400"></i> ইনবক্স
+                <button onclick="openInbox()" class="relative text-xs bg-slate-800 hover:bg-emerald-500/20 text-slate-300 px-3.5 py-2 rounded-xl transition font-medium flex items-center gap-1.5 border border-slate-700">
+                    <i class="fa-solid fa-headset text-emerald-400"></i> সাপোর্ট ইনবক্স
                 </button>
-                <button onclick="localStorage.clear(); location.reload();" class="text-xs bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 px-3 py-2 rounded-xl transition font-medium">
+                <button onclick="localStorage.clear(); location.reload();" class="text-xs bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 p-2.5 rounded-xl transition font-medium border border-slate-700" title="লগআউট">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </div>
@@ -71,33 +71,34 @@
 
         <!-- Admin Control & Post Panel (Visible only for 01866989184) -->
         <div id="adminPanel" class="hidden space-y-4 mb-4">
+            <!-- Stats & Settings -->
             <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 shadow-xl">
                 <h2 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders"></i> অ্যাডমিন কন্ট্রোল প্যানেল
+                    <i class="fa-solid fa-chart-line"></i> অ্যাডমিন কন্ট্রোল ও ড্যাশবোর্ড
                 </h2>
                 <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center">
-                        <span class="text-slate-300">মোট মেম্বার:</span>
-                        <span id="totalMembersCount" class="text-emerald-400 font-bold">2000+</span>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
+                        <span class="text-slate-400 text-[10px]">মোট জয়েনকৃত মেম্বার</span>
+                        <span id="totalMembersCount" class="text-emerald-400 font-bold text-base mt-0.5">লোড হচ্ছে...</span>
                     </div>
-                    <label class="flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 cursor-pointer">
-                        <span>মেম্বার পোস্ট অন/অফ</span>
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <span class="text-slate-300 text-[11px]">মেম্বার পোস্ট পারমিশন</span>
                         <input type="checkbox" id="settingMemberPost" class="accent-emerald-500 w-4 h-4">
-                    </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- Post Creator Box -->
+            <!-- Rich Post Creator Box (Text, Photo, Video, Link, Poll) -->
             <div class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 shadow-xl">
                 <h2 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-pen-nib"></i> নতুন পোস্ট / ক্লাস লিংক ক্রিয়েটর
+                    <i class="fa-solid fa-pen-to-square"></i> নতুন পোস্ট / লাইভ ক্লাস লিংক ক্রিয়েটর
                 </h2>
                 <form id="adminPostForm" class="space-y-3">
-                    <textarea id="postContent" rows="3" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="টেক্সট, ইউটিউব, ফেসবুক বা জুম লাইভ ক্লাস লিংক এখানে লিখুন..."></textarea>
+                    <textarea id="postContent" rows="3" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="গ্রুপের জন্য ঘোষণা, টিপস বা ইউটিউব/জুম লাইভ ক্লাস লিংক লিখুন..."></textarea>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input type="url" id="postMedia" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="স্ক্রিনশট বা ছবি/ভিডিও লিংক (ঐচ্ছিক)">
-                        <input type="url" id="postLink" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="সরাসরি ভিজিট বা অ্যাপ লিংক (ঐচ্ছিক)">
+                        <input type="url" id="postMedia" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="ফটো বা ভিডিও লিংক (স্ক্রিনশট URL)">
+                        <input type="url" id="postLink" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-600" placeholder="সরাসরি অ্যাপ লিংক (YouTube/Zoom/Facebook)">
                     </div>
 
                     <!-- Poll Creator -->
@@ -111,7 +112,7 @@
                     </div>
 
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold py-2.5 rounded-xl transition shadow-lg shadow-emerald-900/40">
-                        <i class="fa-solid fa-paper-plane mr-1"></i> পোস্ট পাবলিশ করুন
+                        <i class="fa-solid fa-paper-plane mr-1"></i> পোস্ট পাবলিশ করুন (নোটিফিকেশন সহ)
                     </button>
                 </form>
             </div>
@@ -123,20 +124,23 @@
         </div>
     </div>
 
-    <!-- Private Chat / Inbox Modal -->
-    <div id="chatModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-4 flex flex-col h-[80vh] shadow-2xl">
+    <!-- Private Chat / Support Inbox Modal -->
+    <div id="chatModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-3xl p-4 flex flex-col h-[85vh] shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
                 <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
-                    <i class="fa-solid fa-headset"></i> অ্যাডমিন প্রাইভেট সাপোর্ট ইনবক্স
+                    <i class="fa-solid fa-headset"></i> <span id="chatModalTitle">অ্যাডমিন সাপোর্ট ইনবক্স</span>
                 </h3>
-                <button onclick="closeInbox()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeInbox()" class="text-slate-400 hover:text-white text-base"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="chatMessages" class="flex-1 overflow-y-auto space-y-3 pr-2 text-xs">
-                <!-- Chat history -->
+            
+            <!-- If Admin, list user threads. If Member, show direct chat with Admin -->
+            <div id="chatBodyContainer" class="flex-1 overflow-y-auto space-y-3 pr-2 text-xs">
+                <!-- Dynamic chats -->
             </div>
+            
             <form id="chatForm" class="mt-3 flex gap-2 pt-2 border-t border-slate-800">
-                <input type="text" id="chatInput" required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="অ্যাডমিনকে মেসেজ লিখুন...">
+                <input type="text" id="chatInput" required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="আপনার মেসেজ লিখুন...">
                 <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold">প্রেরণ</button>
             </form>
         </div>
@@ -145,7 +149,7 @@
     <!-- Firebase SDK Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, increment, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc, increment, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDkuMFfiBaX-eXnByyiq6naqmgbr2BDJ4I",
@@ -162,6 +166,7 @@
 
         const ADMIN_PHONE = "01866989184";
         let currentUser = null;
+        let activeChatUserPhone = null; // For admin reply view
 
         const authModal = document.getElementById('authModal');
         const mainApp = document.getElementById('mainApp');
@@ -202,6 +207,9 @@
                     currentUser = { name, phone, email, timestamp: new Date().toISOString() };
                     localStorage.setItem('community_user', JSON.stringify(currentUser));
                     
+                    // Save subscriber info for member count & notifications
+                    await addDoc(collection(db, "subscribers"), currentUser).catch(e=>{});
+
                     authModal.classList.add('hidden');
                     mainApp.classList.remove('hidden');
                     initApp(currentUser);
@@ -209,7 +217,6 @@
                     errorMsg.classList.remove('hidden');
                 }
             } catch (err) {
-                errorMsg.classList.add('hidden'); // fallback
                 currentUser = { name, phone, email, timestamp: new Date().toISOString() };
                 localStorage.setItem('community_user', JSON.stringify(currentUser));
                 authModal.classList.add('hidden');
@@ -222,22 +229,23 @@
             if (user.phone === ADMIN_PHONE) {
                 profileInfo.innerText = `${user.name} (অ্যাডমিন)`;
                 adminPanel.classList.remove('hidden');
-                updateMemberCount();
+                loadMemberCount();
             } else {
-                profileInfo.innerText = `${user.name} (মেম্বার - গোপন)`;
+                profileInfo.innerText = `${user.name} (মেম্বার)`;
             }
             loadPosts();
-            loadChatMessages();
         }
 
-        async function updateMemberCount() {
+        async function loadMemberCount() {
             try {
-                const snap = await getDocs(collection(db, "posts"));
-                document.getElementById('totalMembersCount').innerText = "২০০০+ মেম্বার";
-            } catch(e) {}
+                const snap = await getDocs(collection(db, "subscribers"));
+                document.getElementById('totalMembersCount').innerText = `${snap.size} জন`;
+            } catch(e) {
+                document.getElementById('totalMembersCount').innerText = "১+ জন";
+            }
         }
 
-        // Handle Admin Post Submission
+        // Handle Admin Post Submission & Native Notification Bar Alert
         adminPostForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const content = document.getElementById('postContent').value;
@@ -255,7 +263,7 @@
                         { text: pollOpt1, votes: 0 },
                         { text: pollOpt2, votes: 0 }
                     ],
-                    voters: []
+                    votedUsers: []
                 };
             }
 
@@ -266,12 +274,21 @@
                     link,
                     poll: pollData,
                     reactions: { love: 0, like: 0 },
-                    views: 0,
+                    views: 1,
                     author: "অ্যাডমিন",
                     createdAt: serverTimestamp()
                 });
+
+                // Trigger Browser Notification Bar Alert
+                if (Notification.permission === 'granted') {
+                    new Notification("নতুন ঘোষণা ও আপডেট!", {
+                        body: content.substring(0, 80) + '...',
+                        icon: "https://cdn-icons-png.flaticon.com/512/3233/3233483.png"
+                    });
+                }
+
                 adminPostForm.reset();
-                alert('পোস্ট সফলভাবে পাবলিশ হয়েছে!');
+                alert('পোস্ট সফলভাবে পাবলিশ হয়েছে এবং নোটিফিকেশন পাঠানো হয়েছে!');
             } catch (err) {
                 console.error(err);
                 alert('পোস্ট করতে সমস্যা হয়েছে।');
@@ -288,7 +305,6 @@
                     return;
                 }
                 
-                // Play notification sound when new post arrives
                 if(notifSound) { notifSound.play().catch(e => {}); }
 
                 snapshot.forEach((docSnap) => {
@@ -296,7 +312,14 @@
                     const postId = docSnap.id;
                     const date = post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('bn-BD') : 'এইমাত্র';
                     
-                    let mediaHtml = post.media ? `<div class="mt-3 rounded-xl overflow-hidden border border-slate-800"><img src="${post.media}" class="w-full max-h-80 object-cover"></div>` : '';
+                    let mediaHtml = '';
+                    if (post.media) {
+                        if (post.media.match(/\.(mp4|webm|ogg)$/i)) {
+                            mediaHtml = `<div class="mt-3 rounded-xl overflow-hidden border border-slate-800"><video src="${post.media}" controls class="w-full max-h-80 object-cover"></video></div>`;
+                        } else {
+                            mediaHtml = `<div class="mt-3 rounded-xl overflow-hidden border border-slate-800"><img src="${post.media}" class="w-full max-h-80 object-cover"></div>`;
+                        }
+                    }
 
                     let linkHtml = post.link ? `<div class="mt-3"><a href="${post.link}" target="_blank" class="inline-flex items-center gap-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fa-solid fa-external-link"></i> লিংকে প্রবেশ করুন (ইউটিউব/ফেসবুক/জুম)</a></div>` : '';
 
@@ -319,6 +342,12 @@
                         `;
                     }
 
+                    let adminControls = currentUser.phone === ADMIN_PHONE ? `
+                        <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-800/60 text-[11px]">
+                            <button onclick="deletePost('${postId}')" class="text-rose-400 hover:underline"><i class="fa-solid fa-trash mr-1"></i> ডিলিট</button>
+                        </div>
+                    ` : '';
+
                     const postEl = document.createElement('div');
                     postEl.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg";
                     postEl.innerHTML = `
@@ -333,6 +362,7 @@
                         ${mediaHtml}
                         ${linkHtml}
                         ${pollHtml}
+                        ${adminControls}
 
                         <!-- Stats & Reactions Bar -->
                         <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
@@ -344,7 +374,7 @@
                                     <i class="fa-solid fa-thumbs-up text-emerald-400"></i> <span>${post.reactions?.like || 0}</span> লাইক
                                 </button>
                             </div>
-                            <span class="text-[11px] text-slate-500"><i class="fa-solid fa-eye mr-1"></i> ${post.views || 150}+ দেখেছে</span>
+                            <span class="text-[11px] text-slate-500"><i class="fa-solid fa-eye mr-1"></i> ${post.views || 1} জন দেখেছে</span>
                         </div>
                     `;
                     feedContainer.appendChild(postEl);
@@ -352,45 +382,61 @@
             });
         }
 
-        // Global functions for interaction
         window.reactPost = async (postId, type) => {
             const ref = doc(db, "posts", postId);
             try {
-                await updateDoc(ref, {
-                    [`reactions.${type}`]: increment(1)
-                });
-            } catch(e) { console.error(e); }
+                await updateDoc(ref, { [`reactions.${type}`]: increment(1) });
+            } catch(e) {}
         };
 
         window.votePoll = async (postId, optIndex) => {
             alert('আপনার ভোট সফলভাবে জমা হয়েছে!');
         };
 
-        // Inbox / Chat functionality
+        window.deletePost = async (postId) => {
+            if(confirm('포স্টটি ডিলিট করতে চান?')) {
+                await deleteDoc(doc(db, "posts", postId));
+                alert('পোস্ট ডিলিট করা হয়েছে।');
+            }
+        };
+
+        // Inbox / Support Chat Logic with Admin Reply & Seen Status
         window.openInbox = () => {
             document.getElementById('chatModal').classList.remove('hidden');
+            loadChatMessages();
         };
         window.closeInbox = () => {
             document.getElementById('chatModal').classList.add('hidden');
+            activeChatUserPhone = null;
         };
 
         const chatForm = document.getElementById('chatForm');
-        const chatMessages = document.getElementById('chatMessages');
+        const chatBodyContainer = document.getElementById('chatBodyContainer');
 
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = document.getElementById('chatInput').value.trim();
             if(!text) return;
 
+            const receiverPhone = currentUser.phone === ADMIN_PHONE ? activeChatUserPhone : ADMIN_PHONE;
+            if(!receiverPhone && currentUser.phone === ADMIN_PHONE) {
+                alert('দয়া করে লিস্ট থেকে যেকোনো ইউজারের চ্যাট সিলেক্ট করুন।');
+                return;
+            }
+
             try {
                 await addDoc(collection(db, "private_chats"), {
                     senderName: currentUser.name,
                     senderPhone: currentUser.phone,
+                    receiverPhone: receiverPhone,
                     message: text,
+                    seen: false,
                     createdAt: serverTimestamp()
                 });
                 document.getElementById('chatInput').value = '';
-                alert('মেসেজটি সফলভাবে অ্যাডমিনের কাছে পাঠানো হয়েছে!');
+                if(currentUser.phone !== ADMIN_PHONE) {
+                    alert('আপনার মেসেজটি সফলভাবে অ্যাডমিনের কাছে পাঠানো হয়েছে!');
+                }
             } catch(err) {
                 alert('মেসেজ পাঠাতে সমস্যা হয়েছে।');
             }
@@ -399,22 +445,70 @@
         function loadChatMessages() {
             const q = query(collection(db, "private_chats"), orderBy("createdAt", "asc"));
             onSnapshot(q, (snapshot) => {
-                chatMessages.innerHTML = "";
-                if(snapshot.empty) {
-                    chatMessages.innerHTML = `<p class="text-slate-500 text-center py-4">কোনো মেসেজ নেই। অ্যাডমিনকে সরাসরি কিছু জিজ্ঞেস করুন।</p>`;
-                    return;
-                }
-                snapshot.forEach(docSnap => {
-                    const msg = docSnap.data();
-                    if(currentUser.phone !== ADMIN_PHONE && msg.senderPhone !== currentUser.phone) return; // Members only see their own chats, Admin sees all
+                chatBodyContainer.innerHTML = "";
+                
+                if (currentUser.phone === ADMIN_PHONE) {
+                    // Admin view: show list of users who messaged
+                    if(activeChatUserPhone === null) {
+                        document.getElementById('chatModalTitle').innerText = "সকল ইউজারের ইনবক্স লিস্ট";
+                        let userMap = {};
+                        snapshot.forEach(docSnap => {
+                            const msg = docSnap.data();
+                            const otherPhone = msg.senderPhone === ADMIN_PHONE ? msg.receiverPhone : msg.senderPhone;
+                            if(otherPhone && otherPhone !== ADMIN_PHONE) {
+                                userMap[otherPhone] = msg.senderPhone === ADMIN_PHONE ? msg.senderName : msg.senderName;
+                            }
+                        });
 
-                    const isMe = msg.senderPhone === currentUser.phone;
-                    const div = document.createElement('div');
-                    div.className = `p-2.5 rounded-xl max-w-[85%] text-xs ${isMe ? 'ml-auto bg-emerald-600/20 border border-emerald-500/30 text-white' : 'mr-auto bg-slate-800 text-slate-200'}`;
-                    div.innerHTML = `<strong class="text-emerald-400 block mb-0.5">${msg.senderName}</strong> ${msg.message}`;
-                    chatMessages.appendChild(div);
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                        const phones = Object.keys(userMap);
+                        if(phones.length === 0) {
+                            chatBodyContainer.innerHTML = `<p class="text-slate-500 text-center py-6">কোনো নতুন ইনবক্স মেসেজ নেই।</p>`;
+                            return;
+                        }
+
+                        phones.forEach(phone => {
+                            const div = document.createElement('div');
+                            div.className = "bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center cursor-pointer hover:border-emerald-500 transition";
+                            div.innerHTML = `<div><strong class="text-white text-xs">${userMap[phone]}</strong><p class="text-[10px] text-slate-400">নম্বর: ${phone}</p></div><span class="bg-emerald-600 text-white text-[10px] px-2.5 py-1 rounded-lg">চ্যাট খুলুন</span>`;
+                            div.onclick = () => {
+                                activeChatUserPhone = phone;
+                                loadChatMessages();
+                            };
+                            chatBodyContainer.appendChild(div);
+                        });
+                        return;
+                    } else {
+                        // Admin inside specific user thread
+                        document.getElementById('chatModalTitle').innerText = `চ্যাট: ${activeChatUserPhone} [ফিরে যান]`;
+                        document.getElementById('chatModalTitle').onclick = () => { activeChatUserPhone = null; loadChatMessages(); };
+                        
+                        snapshot.forEach(docSnap => {
+                            const msg = docSnap.data();
+                            if(msg.senderPhone === activeChatUserPhone || msg.receiverPhone === activeChatUserPhone) {
+                                const isMe = msg.senderPhone === ADMIN_PHONE;
+                                const div = document.createElement('div');
+                                div.className = `p-2.5 rounded-xl max-w-[85%] text-xs ${isMe ? 'ml-auto bg-emerald-600/20 border border-emerald-500/30 text-white' : 'mr-auto bg-slate-800 text-slate-200'}`;
+                                div.innerHTML = `<strong class="text-emerald-400 block mb-0.5">${msg.senderName}</strong> ${msg.message} <span class="text-[9px] text-slate-400 block text-right mt-1">${msg.seen ? '✔✔ সিন হয়েছে' : '✔ প্রেরিত'}</span>`;
+                                chatBodyContainer.appendChild(div);
+                            }
+                        });
+                        chatBodyContainer.scrollTop = chatBodyContainer.scrollHeight;
+                    }
+                } else {
+                    // Member view: direct chat with Admin
+                    document.getElementById('chatModalTitle').innerText = "অ্যাডমিন সাপোর্ট ইনবক্স";
+                    snapshot.forEach(docSnap => {
+                        const msg = docSnap.data();
+                        if(msg.senderPhone === currentUser.phone || msg.receiverPhone === currentUser.phone) {
+                            const isMe = msg.senderPhone === currentUser.phone;
+                            const div = document.createElement('div');
+                            div.className = `p-2.5 rounded-xl max-w-[85%] text-xs ${isMe ? 'ml-auto bg-emerald-600/20 border border-emerald-500/30 text-white' : 'mr-auto bg-slate-800 text-slate-200'}`;
+                            div.innerHTML = `<strong class="text-emerald-400 block mb-0.5">${msg.senderName}</strong> ${msg.message} <span class="text-[9px] text-slate-400 block text-right mt-1">${msg.seen ? '✔✔ সিন' : '✔'}</span>`;
+                            chatBodyContainer.appendChild(div);
+                        }
+                    });
+                    chatBodyContainer.scrollTop = chatBodyContainer.scrollHeight;
+                }
             });
         }
     </script>
